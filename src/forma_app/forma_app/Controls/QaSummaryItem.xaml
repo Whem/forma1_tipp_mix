@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:forma_app.ViewModels"
+             xmlns:model="clr-namespace:forma_app.Model"
+             x:Class="forma_app.Controls.QaSummaryItem"
+             x:DataType="model:SummaryQa">
+    <StackLayout Orientation="Horizontal">
+        <Label Text="{Binding Question}" TextColor="White"></Label>
+        <Label Text="{Binding Answer}" Margin="20,0,0,0" TextColor="White"></Label>
+    </StackLayout>
+</ContentView>

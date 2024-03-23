@@ -4,7 +4,10 @@ from details.serializers import RaceSerializer
 
 
 class QuestionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     question = serializers.CharField()
+    is_number = serializers.BooleanField()
+    closest_number = serializers.BooleanField()
 
 
 class AnswerSerializer(serializers.Serializer):

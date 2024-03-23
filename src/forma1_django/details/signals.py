@@ -16,7 +16,6 @@ def get_pilot_data(pilot):
     return {
         'id': pilot.id,
         'name': pilot.name,
-        'team': get_team_data(pilot.team),
     }
 
 def get_season_data(season):
@@ -36,8 +35,5 @@ def get_race_data(race):
     return {
         'id': race.id,
         'name': race.name,
-        'location': race.location,
         'date': race.date,
-        'time': race.time,
-        "season": get_season_data(race.season)
     }

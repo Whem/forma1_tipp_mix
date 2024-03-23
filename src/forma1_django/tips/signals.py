@@ -12,6 +12,7 @@ def get_question_data(question, language_id):
         'id': question.id,
         'question': translation.text if translation else '',
         'is_number': question.is_number,
+        'closest_number': question.closest_number,
     }
 
 
