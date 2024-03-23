@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:forma_app.ViewModels"
+             xmlns:syncfusion="clr-namespace:Syncfusion.Maui.ListView;assembly=Syncfusion.Maui.ListView"
+             xmlns:controls="using:forma_app.Controls"
+             x:Class="forma_app.Pages.QaSummaryPage"
+             x:DataType="viewModels:QaSummaryViewModel">
+    <Grid RowDefinitions="Auto,*,Auto"  HorizontalOptions="Center">
+        <Label Text="Question's summary" FontSize="30" HorizontalOptions="Center" />
+        <syncfusion:SfListView   HorizontalOptions="Center" 
+                                 ItemsSource="{Binding Answers}" Grid.Row="1" >
+            <syncfusion:SfListView.ItemTemplate>
+            <DataTemplate>
+                <controls:QaSummaryItem></controls:QaSummaryItem>
+            </DataTemplate>
+                </syncfusion:SfListView.ItemTemplate>
+        </syncfusion:SfListView>
+        <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Grid.Row="2">
+            <Button Text="Main menu" Command="{Binding BackToMainCommand}"></Button>
+            <Button Text="Back to Q and A" Command="{Binding GoToQaCommand}"></Button>
+        </StackLayout>
+        
+    </Grid>
+</ContentPage>

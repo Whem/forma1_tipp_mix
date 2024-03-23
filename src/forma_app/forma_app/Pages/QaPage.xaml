@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:forma_app.ViewModels"
+             xmlns:editors="clr-namespace:Syncfusion.Maui.Inputs;assembly=Syncfusion.Maui.Inputs"
+             xmlns:core="clr-namespace:Syncfusion.Maui.Core;assembly=Syncfusion.Maui.Core"
+             xmlns:syncfusion="clr-namespace:Syncfusion.Maui.ListView;assembly=Syncfusion.Maui.ListView"
+             x:Class="forma_app.Pages.QaPage"
+             x:DataType="viewModels:QaViewModel">
+    
+        <VerticalStackLayout Spacing="25" Padding="30" HorizontalOptions="Center">
+           
+        <Label Text="Question and Answer" FontSize="30" HorizontalOptions="Center" />
+            <Label Text="{Binding CurrentRace.Name}"  HorizontalOptions="Center"></Label>
+            <Label Text="{Binding CurrentQuestion}" FontSize="20" HorizontalOptions="Center"/>
+            <Label Text="Closest Number Win!" IsVisible="{Binding VisibleClosestNumberWin}"></Label>
+            <editors:SfComboBox 
+                            IsEditable="True"
+                            WidthRequest="250" 
+                            TextSearchMode="Contains"
+                            IsFilteringEnabled="true"
+                            ItemsSource="{Binding Pilots}"
+                            DisplayMemberPath="Name"
+                            TextMemberPath="Name"
+                            SelectedItem="{Binding SelectedPilot}" IsVisible="{Binding VisibleCombobox}" />
+            <editors:SfNumericEntry ShowClearButton="True" 
+                                IsEditable="True" 
+                                Minimum="1"
+                                Maximum="100"
+                                WidthRequest="200"
+                                UpDownPlacementMode="Inline"
+                                Value="{Binding SelectedNumber}" IsVisible="{Binding VisibleNumberUpDown}"/>
+            <HorizontalStackLayout HorizontalOptions="Center">
+                <Button Text="Previous" Command="{Binding PreviousQuestionCommand}"/>
+                <Button Text="Back" Command="{Binding BackCommand}"></Button>
+                <Button Text="Next" Command="{Binding NextQuestionCommand}"/>
+            </HorizontalStackLayout>
+            <ScrollView HeightRequest="300" HorizontalOptions="Center">
+                <syncfusion:SfListView 
+                    ItemsSource="{Binding Logs}" Grid.Row="1" >
+                    <syncfusion:SfListView.ItemTemplate>
+                        <DataTemplate>
+                            <Label Text="{Binding .}" VerticalOptions="Center" Padding="0" HorizontalOptions="Center" TextColor="White" BackgroundColor="Black"></Label>
+                        </DataTemplate>
+                    </syncfusion:SfListView.ItemTemplate>
+                </syncfusion:SfListView>
+        </ScrollView>
+        </VerticalStackLayout>
+    
+</ContentPage>

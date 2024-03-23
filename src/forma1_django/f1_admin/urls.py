@@ -7,7 +7,6 @@ from . import views
 
 
 urlpatterns = [
-    path('admin/fill', views.FillDataAPIView.as_view()),
     path('admin/add_race', views.PostRaceAPIView.as_view()),
 ]
 

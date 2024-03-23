@@ -1,0 +1,741 @@
+openapi: 3.0.3
+info:
+  title: Forma1TipMixAPI
+  version: 1.0.0
+  description: Forma 1 SuperMulti TipMix API
+paths:
+  /admin/add_race:
+    post:
+      operationId: admin_add_race_create
+      summary: Post Race
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostRaceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostRaceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostRaceRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+          description: ''
+  /api/schema/swagger.json:
+    get:
+      operationId: api_schema_swagger.json_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /data/current_race:
+    get:
+      operationId: data_current_race_retrieve
+      summary: Get Current
+      tags:
+      - data
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Race'
+          description: ''
+  /data/pilots:
+    get:
+      operationId: data_pilots_list
+      summary: Get Pilots
+      tags:
+      - data
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pilot'
+          description: ''
+  /data/races:
+    get:
+      operationId: data_races_list
+      summary: Get Races
+      tags:
+      - data
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Race'
+          description: ''
+  /data/teams:
+    get:
+      operationId: data_teams_list
+      summary: Get Teams
+      tags:
+      - data
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+          description: ''
+  /statistic/compare:
+    post:
+      operationId: statistic_compare_create
+      summary: Create compare
+      tags:
+      - statistic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCompareRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostCompareRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostCompareRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Success'
+          description: ''
+  /statistic/statistics:
+    get:
+      operationId: statistic_statistics_list
+      summary: Get statistics
+      parameters:
+      - in: query
+        name: range_choice
+        schema:
+          enum:
+          - question
+          - race
+          - total
+          type: string
+          minLength: 1
+        description: |-
+          * `question` - question
+          * `race` - race
+          * `total` - total
+        required: true
+      - in: query
+        name: user_id
+        schema:
+          type: integer
+          nullable: true
+      tags:
+      - statistic
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Success'
+          description: ''
+  /system/language:
+    get:
+      operationId: system_language_list
+      summary: Get Language
+      tags:
+      - system
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Language'
+          description: ''
+  /system/ping:
+    get:
+      operationId: system_ping_retrieve
+      summary: Ping
+      tags:
+      - system
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+          description: ''
+  /tips/answers:
+    get:
+      operationId: tips_answers_list
+      summary: Get answers
+      parameters:
+      - in: query
+        name: id
+        schema:
+          type: integer
+          nullable: true
+      - in: query
+        name: question_id
+        schema:
+          type: integer
+          nullable: true
+      - in: query
+        name: race_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tips
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Answer'
+          description: ''
+    post:
+      operationId: tips_answers_create
+      summary: Post answer
+      tags:
+      - tips
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAnswerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostAnswerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostAnswerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Answer'
+          description: ''
+  /tips/questions:
+    get:
+      operationId: tips_questions_list
+      summary: Get questions
+      tags:
+      - tips
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+          description: ''
+  /tips/race_results:
+    get:
+      operationId: tips_race_results_list
+      summary: Get race result
+      tags:
+      - tips
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Answer'
+          description: ''
+    post:
+      operationId: tips_race_results_create
+      summary: Post race result
+      tags:
+      - tips
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAnswerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostAnswerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostAnswerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Answer'
+          description: ''
+  /user/login:
+    post:
+      operationId: user_login_create
+      summary: Login
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostLoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostLoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostLoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
+  /user/logout:
+    post:
+      operationId: user_logout_create
+      summary: Logout
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostLogoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostLogoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostLogoutRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+          description: ''
+  /user/register:
+    post:
+      operationId: user_register_create
+      summary: Registration
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+          description: ''
+components:
+  schemas:
+    Answer:
+      type: object
+      properties:
+        id:
+          type: integer
+        race:
+          $ref: '#/components/schemas/Race'
+        question:
+          $ref: '#/components/schemas/Question'
+        answer:
+          type: string
+      required:
+      - answer
+      - id
+      - question
+      - race
+    Language:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          maxLength: 255
+        code:
+          type: string
+          maxLength: 255
+      required:
+      - code
+      - id
+      - name
+    Login:
+      type: object
+      properties:
+        jwt_token:
+          type: string
+          maxLength: 255
+        refresh_token:
+          type: string
+          maxLength: 255
+      required:
+      - jwt_token
+      - refresh_token
+    Pilot:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    PostAnswerRequest:
+      type: object
+      properties:
+        race_id:
+          type: integer
+        question_id:
+          type: integer
+        answer:
+          type: string
+          minLength: 1
+      required:
+      - answer
+      - question_id
+      - race_id
+    PostCompareRequest:
+      type: object
+      properties:
+        race_id:
+          type: integer
+      required:
+      - race_id
+    PostLoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 255
+        password:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - email
+      - password
+    PostLogoutRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          minLength: 1
+      required:
+      - refresh_token
+    PostRaceRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          nullable: true
+        name:
+          type: string
+          minLength: 1
+        location:
+          type: string
+          minLength: 1
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+          format: time
+      required:
+      - date
+      - location
+      - name
+      - time
+    PostRegistrationRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 255
+        password:
+          type: string
+          minLength: 1
+          maxLength: 255
+        nickname:
+          type: string
+          minLength: 1
+          maxLength: 255
+        language_id:
+          type: integer
+      required:
+      - email
+      - password
+    Question:
+      type: object
+      properties:
+        id:
+          type: integer
+        question:
+          type: string
+        is_number:
+          type: boolean
+        closest_number:
+          type: boolean
+      required:
+      - closest_number
+      - id
+      - is_number
+      - question
+    Race:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        date:
+          type: string
+          format: date-time
+      required:
+      - date
+      - id
+      - name
+    Success:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+      - success
+    Team:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

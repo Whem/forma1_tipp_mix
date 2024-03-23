@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="using:forma_app.ViewModels"
+             xmlns:editors="clr-namespace:Syncfusion.Maui.Inputs;assembly=Syncfusion.Maui.Inputs"
+             x:Class="forma_app.Pages.RegisterPage"
+             x:DataType="viewModels:RegisterViewModel">
+    <ScrollView>
+        <VerticalStackLayout Spacing="15" Padding="30" HorizontalOptions="Center">
+
+            <!-- Email -->
+            <Label Text="Email" FontSize="Medium"/>
+            <Entry Text="{Binding Email}" Placeholder="Enter your email" Keyboard="Email"/>
+
+            <!-- Password -->
+            <Label Text="Password" FontSize="Medium"/>
+            <Entry Text="{Binding Password}" Placeholder="Enter your password" IsPassword="True"/>
+
+            <!-- Confirm Password -->
+            <Label Text="Password" FontSize="Medium"/>
+            <Entry Text="{Binding ConfirmPassword}" Placeholder="Enter your password" IsPassword="True"/>
+
+            <!-- Nickname -->
+            <Label Text="Nickname" FontSize="Medium"/>
+            <Entry Text="{Binding NickName}" Placeholder="Choose a nickname"/>
+
+
+            <editors:SfComboBox 
+                IsEditable="False"
+                WidthRequest="250" 
+                ItemsSource="{Binding Languages}"
+                DisplayMemberPath="Name"
+                SelectedItem="{Binding Language}" />
+            <!-- Register Button -->
+            
+            <Grid ColumnDefinitions="*,*">
+                <Button Text="Register" Command="{Binding RegisterCommand}"/>
+                <Button Text="Cancel" Grid.Column="1" Command="{Binding BackCommand}"/>
+            </Grid>
+           
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -8,6 +8,7 @@ from . import views
 
 urlpatterns = [
     path('data/races', views.RaceAPIView.as_view()),
+    path('data/current_race', views.CurrentRaceAPIView.as_view()),
     path('data/teams', views.TeamAPIView.as_view()),
     path('data/pilots', views.PilotAPIView.as_view()),
 ]
