@@ -60,6 +60,12 @@ namespace forma_app
 
             s.AddTransient<QaSummaryPage>();
             s.AddTransient<QaSummaryViewModel>();
+
+            s.AddTransient<FillResultPage>();
+            s.AddTransient<FillResultViewModel>();
+
+            s.AddTransient<ComparePage>();
+            s.AddTransient<CompareViewModel>();
         }
     }
 }

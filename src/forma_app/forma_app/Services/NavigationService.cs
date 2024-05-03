@@ -11,7 +11,9 @@ namespace forma_app.Services
             Statistics,
             Qa,
             Login,
-            QaSummary
+            QaSummary,
+            FillResult,
+            Compare
         }
 
         public NavigationService()
@@ -22,6 +24,9 @@ namespace forma_app.Services
             PagesByKey.Add(NavigationPageEnum.Qa, typeof(QaPage));
             PagesByKey.Add(NavigationPageEnum.Login, typeof(LoginPage));
             PagesByKey.Add(NavigationPageEnum.QaSummary, typeof(QaSummaryPage));
+            PagesByKey.Add(NavigationPageEnum.FillResult, typeof(FillResultPage));
+            PagesByKey.Add(NavigationPageEnum.Compare, typeof(ComparePage));
+
         }
 
         public async Task OnNavigateAsync(NavigationPageEnum navigationPageEnum, bool isThreaded)

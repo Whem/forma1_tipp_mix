@@ -12,13 +12,15 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Image Grid.Row="0" Source="logo.png"></Image>
         <Button Grid.Row="1" Text="Q and A" Command="{Binding QaCommand}"></Button>
         <Button Grid.Row="2" Text="Live" IsEnabled="False"></Button>
-        <Button Grid.Row="3" Text="Statistics" Command="{Binding StatisticsCommand}" IsEnabled="False"></Button>
-        <Button Grid.Row="4" Text="Settings"  IsEnabled="False" ></Button>
-        <Button Grid.Row="5" Text="Logout"  IsEnabled="False" ></Button>
+        <Button Grid.Row="3" Text="Statistics" Command="{Binding StatisticsCommand}"></Button>
+        <Button Grid.Row="4" Text="Fill Data" Command="{Binding FillResultsCommand}" IsVisible="{Binding ApiService.IsAdmin}"></Button>
+        <Button Grid.Row="5" Text="Settings"  IsEnabled="False" ></Button>
+        <Button Grid.Row="6" Text="Logout"  IsEnabled="False" ></Button>
 
 
     </Grid>

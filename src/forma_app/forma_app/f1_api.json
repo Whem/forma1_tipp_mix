@@ -242,6 +242,23 @@ paths:
                 items:
                   $ref: '#/components/schemas/Team'
           description: ''
+  /data/users:
+    get:
+      operationId: data_users_list
+      summary: Get users
+      tags:
+      - data
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Users'
+          description: ''
   /statistic/compare:
     post:
       operationId: statistic_compare_create
@@ -306,7 +323,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Success'
+                  $ref: '#/components/schemas/UserScoreStatistics'
           description: ''
   /system/language:
     get:
@@ -586,6 +603,8 @@ components:
         refresh_token:
           type: string
           maxLength: 255
+        is_admin:
+          type: boolean
       required:
       - jwt_token
       - refresh_token
@@ -734,6 +753,39 @@ components:
       required:
       - id
       - name
+    UserScoreDetail:
+      type: object
+      properties:
+        score:
+          type: integer
+        detail:
+          type: string
+      required:
+      - detail
+      - score
+    UserScoreStatistics:
+      type: object
+      properties:
+        user:
+          type: string
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserScoreDetail'
+      required:
+      - scores
+      - user
+    Users:
+      type: object
+      properties:
+        id:
+          type: integer
+        nickname:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - nickname
   securitySchemes:
     jwtAuth:
       type: http

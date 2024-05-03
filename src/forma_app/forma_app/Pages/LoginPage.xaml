@@ -2,12 +2,14 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewModels="clr-namespace:forma_app.ViewModels"
+             xmlns:core="clr-namespace:Syncfusion.Maui.Core;assembly=Syncfusion.Maui.Core"
              x:Class="forma_app.Pages.LoginPage"
              Shell.NavBarIsVisible="False"
              x:DataType="viewModels:LoginViewModel">
-    <Grid HorizontalOptions="Center" WidthRequest="400" VerticalOptions="Center">
+    <Grid>
+    <Grid HorizontalOptions="Center" WidthRequest="300" VerticalOptions="Center">
         <Grid.RowDefinitions>
-            <RowDefinition Height="300"/>
+            <RowDefinition Height="200"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -17,14 +19,14 @@
         </Grid.RowDefinitions>
         <Image Grid.Row="0" Source="logo.png"></Image>
         <Label Grid.Row="1" Text="Login" FontSize="Large" HorizontalOptions="Center"/>
-        <Entry Grid.Row="2" Placeholder="Email" Text="{Binding Email}" />
-        <Entry Grid.Row="3" Placeholder="Password" IsPassword="True" Text="{Binding Password}"/>
-        <Grid Grid.Row="4" ColumnDefinitions="*,*,*,*">
+        <Entry Grid.Row="2" Placeholder="Email" Text="{Binding Email}" HorizontalTextAlignment="Center" />
+        <Entry Grid.Row="3" Placeholder="Password" IsPassword="True" Text="{Binding Password}" HorizontalTextAlignment="Center"/>
+        <StackLayout Grid.Row="4" >
             <Label Text="Remember me" Grid.Column="0" VerticalOptions="Center"/>
-            <CheckBox Grid.Column="1" IsChecked="{Binding StoreService.RememberMe}"></CheckBox>
+            <CheckBox Grid.Column="1" IsChecked="{Binding StoreService.RememberMe}" ></CheckBox>
             <Label Text="Stay signed in" Grid.Column="2" VerticalOptions="Center"/>
             <CheckBox Grid.Column="3" IsChecked="{Binding StoreService.StayLoggedIn}"></CheckBox>
-        </Grid>
+        </StackLayout>
         
 
         
@@ -37,5 +39,12 @@
         
         
 
+    </Grid>
+        <core:SfBusyIndicator x:Name="busyIndicator"
+                              IsRunning="{Binding IsBusy}"
+                              AnimationType="CircularMaterial" 
+                              IsVisible="{Binding IsBusy}"
+                              BackgroundColor="DarkGray"
+                              Opacity="0.3"/>
     </Grid>
 </ContentPage>

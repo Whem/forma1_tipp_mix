@@ -80,31 +80,31 @@ namespace forma_app.ViewModels
         {
             if (Password != ConfirmPassword)
             {
-                await Toast.Make("Passwords do not match").Show();
+                MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make("Passwords do not match").Show(); });
                 return;
             }
 
             if (string.IsNullOrEmpty(Email))
             {
-                await Toast.Make("You must enter an email").Show();
+                MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make("You must enter an email").Show(); });
                 return;
             }
 
             if (string.IsNullOrEmpty(Password))
             {
-                await Toast.Make("You must enter a password").Show();
+                MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make("You must enter a password").Show(); });
                 return;
             }
 
             if (string.IsNullOrEmpty(NickName))
             {
-                await Toast.Make("You must enter a nickname").Show();
+                MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make("You must enter a nickname").Show(); });
                 return;
             }
 
             if (Language == null)
             {
-                await Toast.Make("You must select a language").Show();
+                MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make("You must select a language").Show(); });
                 return;
             }
 
@@ -114,17 +114,17 @@ namespace forma_app.ViewModels
 
                 if (response != null)
                 {
-                    await Toast.Make("User registered successfully").Show();
+                    MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make("User registered successfully").Show(); });
                     await NavigationService.OnNavigateAsync(NavigationService.NavigationPageEnum.Login, true);
                 }
                 else
                 {
-                    await Toast.Make("Error registering user").Show();
+                    MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make("Error registering user").Show(); });
                 }
             }
             catch (Exception e)
             {
-                await Toast.Make("Error registering user").Show();
+                MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make("Error registering user").Show(); });
             }
 
             

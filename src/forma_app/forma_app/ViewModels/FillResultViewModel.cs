@@ -4,17 +4,17 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using CommunityToolkit.Maui.Alerts;
-using CommunityToolkit.Mvvm.Input;
+using System.Windows.Input;
 using forma_app.Model;
 using forma_app.Services;
+using CommunityToolkit.Mvvm.Input;
 
 namespace forma_app.ViewModels
 {
-    public class QaViewModel : BaseViewModel
+    public class FillResultViewModel : BaseViewModel
     {
-        private Race? _currentRace;
+        private Race? _selectedRace;
         public ApiService ApiService { get; }
         public NavigationService NavigationService { get; }
 
@@ -30,12 +30,8 @@ namespace forma_app.ViewModels
         private bool _visibleCombobox;
         private bool _isRunning;
         private ObservableCollection<string> _logs = new ObservableCollection<string>();
+        private ObservableCollection<Race>? _races;
 
-        public Race? CurrentRace
-        {
-            get => _currentRace;
-            set => SetProperty(ref _currentRace, value);
-        }
 
         public int CurrentIndex
         {
@@ -102,7 +98,6 @@ namespace forma_app.ViewModels
                 if (SetProperty(ref _questions, value))
                 {
                     OnPropertyChanged(nameof(NextQuestionCommand));
-                    OnPropertyChanged(nameof(PreviousQuestionCommand));
                 }
             }
         }
@@ -110,10 +105,7 @@ namespace forma_app.ViewModels
         public ObservableCollection<Pilot> Pilots
         {
             get => _pilots;
-            set
-            {
-                if (SetProperty(ref _pilots, value)) OnPropertyChanged(nameof(PreviousQuestionCommand));
-            }
+            set => SetProperty(ref _pilots, value);
         }
 
         public Pilot? SelectedPilot
@@ -128,7 +120,21 @@ namespace forma_app.ViewModels
             set => SetProperty(ref _selectedNumber, value);
         }
 
-        public QaViewModel(ApiService apiService, NavigationService navigationService)
+        public int MaxIndex { get; set; }
+
+        public ObservableCollection<Race>? Races
+        {
+            get => _races;
+            set => SetProperty(ref _races, value);
+        }
+
+        public Race? SelectedRace
+        {
+            get => _selectedRace;
+            set => SetProperty(ref _selectedRace, value);
+        }
+
+        public FillResultViewModel(ApiService apiService, NavigationService navigationService)
         {
             ApiService = apiService;
             NavigationService = navigationService;
@@ -139,11 +145,24 @@ namespace forma_app.ViewModels
                 {
                     IsBusy = true;
                     await Task.Delay(2000);
+                    List<Race>? races = await ApiService.DataApi.DataRacesListAsync();
+
+                    Races = new ObservableCollection<Race>();
+
+                    foreach (Race race in races)
+                    {
+                        MainThread.BeginInvokeOnMainThread(() => { Races.Add(race); });
+                    }
+
                     await LoadQuestions();
                 }
                 catch (Exception e)
                 {
-                    MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make(e.Message).Show(); });
+                    MainThread.BeginInvokeOnMainThread(async () =>
+                    {
+                        await Toast.Make(e.Message).Show();
+                    });
+                    
                 }
                 finally
                 {
@@ -153,14 +172,12 @@ namespace forma_app.ViewModels
             });
         }
 
-        public int MaxIndex { get; set; }
-
         private async Task LoadQuestions()
         {
-            CurrentRace = await ApiService.DataApi.DataCurrentRaceRetrieveAsync();
             
-            var pilots = await ApiService.DataApi.DataPilotsListAsync(CurrentRace.Id);
-            var questions = await ApiService.TipsApi.TipsQuestionsListAsync(CurrentRace.Id);
+
+            var pilots = await ApiService.DataApi.DataPilotsListAsync(1);
+            var questions = await ApiService.TipsApi.TipsQuestionsListAsync(1);
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 Pilots.Clear();
@@ -168,9 +185,6 @@ namespace forma_app.ViewModels
                 {
                     Pilots.Add(new Pilot(pilot.Id, pilot.Name));
                 }
-
-
-
 
                 Questions.Clear();
                 foreach (var question in questions)
@@ -181,17 +195,16 @@ namespace forma_app.ViewModels
                 GetCurrentAnswer();
             });
         }
-     
 
-        public async void GetCurrentAnswer()
+       
+        public void GetCurrentAnswer()
         {
             try
             {
-                IsBusy = true;
-                await Task.Delay(2000);
-                if (CurrentRace != null && MaxIndex > CurrentIndex)
+               
+                if (SelectedRace != null && MaxIndex > CurrentIndex)
                 {
-                    var currentAnswer = ApiService.TipsApi.TipsAnswersList(CurrentRace.Id, Questions[CurrentIndex].Id);
+                    var currentAnswer = ApiService.TipsApi.TipsAnswersList(SelectedRace.Id, Questions[CurrentIndex].Id);
 
                     CurrentAnswer = currentAnswer.Count > 0 ? currentAnswer[0].VarAnswer : string.Empty;
                 }
@@ -217,15 +230,12 @@ namespace forma_app.ViewModels
             {
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
-                    await Toast.Make(e.Message).Show();
+                   await Toast.Make(e.Message).Show();
                 });
                 
             }
-            finally
-            {
-                IsBusy = false;
-            }
            
+
         }
 
         public ICommand NextQuestionCommand => new Command(async () =>
@@ -235,6 +245,7 @@ namespace forma_app.ViewModels
             {
                 IsBusy = true;
                 await Task.Delay(2000);
+
                 string answer;
 
                 if (VisibleNumberUpDown)
@@ -248,28 +259,35 @@ namespace forma_app.ViewModels
 
                 if (string.IsNullOrEmpty(answer))
                 {
+                    MainThread.BeginInvokeOnMainThread(async () =>
+                    {
+                        await Toast.Make("Please select an answer").Show();
+                    });
                     
-                    MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make("Please select an answer").Show(); });
                     return;
                 }
 
-                Logs.Add("Question: " + Questions[CurrentIndex].VarQuestion + " Answer: " + answer);
 
-                if (CurrentRace != null)
-                    await ApiService.TipsApi.TipsAnswersCreateAsync(new PostAnswerRequest(CurrentRace.Id,
+
+                if (SelectedRace != null)
+                    await ApiService.TipsApi.TipsRaceResultsCreateAsync(new PostAnswerRequest(SelectedRace.Id,
                         Questions[CurrentIndex].Id, answer));
 
                 if (CurrentIndex < Questions.Count - 1) CurrentIndex++;
                 else
                 {
-                    await NavigationService.OnNavigateAsync(NavigationService.NavigationPageEnum.QaSummary, false);
+                    await NavigationService.OnNavigateAsync(NavigationService.NavigationPageEnum.Compare, false);
                 }
 
                 GetCurrentAnswer();
             }
             catch (Exception e)
             {
-                MainThread.BeginInvokeOnMainThread(async () => { await Toast.Make(e.Message).Show(); });
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    await Toast.Make(e.Message).Show();
+                });
+               
             }
             finally
             {
@@ -278,28 +296,9 @@ namespace forma_app.ViewModels
 
             
 
-            
-        });
 
-        public ObservableCollection<string> Logs
-        {
-            get => _logs;
-            set => SetProperty(ref _logs, value);
-        }
+        });
 
         public RelayCommand BackCommand => new RelayCommand(async () => await NavigationService.OnNavigateAsync(NavigationService.NavigationPageEnum.Main, true).ConfigureAwait(false));
-
-        public ICommand PreviousQuestionCommand => new Command(() =>
-        {
-            
-
-            if (CurrentIndex > 0) CurrentIndex--;
-
-            GetCurrentAnswer();
-
-
-        });
-
-  
     }
 }

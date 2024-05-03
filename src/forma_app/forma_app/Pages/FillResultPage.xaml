@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="forma_app.Pages.FillResultPage"
+             xmlns:editors="clr-namespace:Syncfusion.Maui.Inputs;assembly=Syncfusion.Maui.Inputs"
+             xmlns:core="clr-namespace:Syncfusion.Maui.Core;assembly=Syncfusion.Maui.Core"
+             xmlns:syncfusion="clr-namespace:Syncfusion.Maui.ListView;assembly=Syncfusion.Maui.ListView"
+             xmlns:viewModels="clr-namespace:forma_app.ViewModels"
+             x:DataType="viewModels:FillResultViewModel">
+    <Grid>
+    <VerticalStackLayout Spacing="25" Padding="30" HorizontalOptions="Center">
+
+        <Label Text="Question and Answer" FontSize="30" HorizontalOptions="Center" />
+        <editors:SfComboBox 
+            IsEditable="True"
+            WidthRequest="250" 
+            TextSearchMode="Contains"
+            IsFilteringEnabled="true"
+            ItemsSource="{Binding Races}"
+            DisplayMemberPath="Name"
+            TextMemberPath="Name"
+            SelectedItem="{Binding SelectedRace}"/>
+
+        <Label Text="{Binding SelectedRace.Name}"  HorizontalOptions="Center"></Label>
+        <Label Text="{Binding CurrentQuestion}" FontSize="20" HorizontalOptions="Center"/>
+        <Label Text="Closest Number Win!" IsVisible="{Binding VisibleClosestNumberWin}"></Label>
+        <editors:SfComboBox 
+                    IsEditable="True"
+                    WidthRequest="250" 
+                    TextSearchMode="Contains"
+                    IsFilteringEnabled="true"
+                    ItemsSource="{Binding Pilots}"
+                    DisplayMemberPath="Name"
+                    TextMemberPath="Name"
+                    SelectedItem="{Binding SelectedPilot}" IsVisible="{Binding VisibleCombobox}" />
+        <editors:SfNumericEntry ShowClearButton="True" 
+                        IsEditable="True" 
+                        Minimum="1"
+                        Maximum="100"
+                        WidthRequest="200"
+                        UpDownPlacementMode="Inline"
+                        Value="{Binding SelectedNumber}" IsVisible="{Binding VisibleNumberUpDown}"/>
+        <HorizontalStackLayout HorizontalOptions="Center">
+           
+            <Button Text="Back" Command="{Binding BackCommand}"></Button>
+            <Button Text="Next" Command="{Binding NextQuestionCommand}"/>
+        </HorizontalStackLayout>
+       
+    </VerticalStackLayout>
+        <core:SfBusyIndicator x:Name="busyIndicator"
+                              IsRunning="{Binding IsBusy}"
+                              AnimationType="CircularMaterial" 
+                              IsVisible="{Binding IsBusy}"
+                              BackgroundColor="DarkGray"
+                              Opacity="0.3"/>
+    </Grid>
+
+</ContentPage>

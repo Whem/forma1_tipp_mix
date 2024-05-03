@@ -4,6 +4,7 @@ from django.db import models
 class f1_question(models.Model):
     is_number = models.BooleanField(default=False)
     closest_number = models.BooleanField(default=False)
+    group_id = models.IntegerField(null=True, blank=True)
 
     class Meta:
         db_table = 'f1_question'
@@ -27,9 +28,10 @@ class f1_answer(models.Model):
         db_table = 'f1_answer'
 
 class f1_race_result(models.Model):
-    race = models.OneToOneField("details.f1_race", on_delete=models.CASCADE)
+    race = models.ForeignKey("details.f1_race", on_delete=models.CASCADE)
     question = models.ForeignKey(f1_question, on_delete=models.CASCADE)
     answer = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "f1_race_result"
