@@ -7,7 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from user.models import User, f1_language
 from user.serializers import LoginSerializer, PostRegistrationSerializer, RegistrationSerializer, PostLogoutSerializer, \
-    SuccessSerializer, PostLoginSerializer, LanguageSerializer
+    SuccessSerializer, PostLoginSerializer, LanguageSerializer, UsersSerializer
 
 
 class LoginAPIView(APIView):
@@ -36,7 +36,7 @@ class LoginAPIView(APIView):
                 return JsonResponse({"error": "User not found"}, status=400, safe=False)
             jwt_token = user.token['access']
             refresh_token = user.token['refresh']
-            serializer = LoginSerializer(data={'jwt_token': jwt_token, 'refresh_token': refresh_token})
+            serializer = LoginSerializer(data={'jwt_token': jwt_token, 'refresh_token': refresh_token, 'is_admin': user.is_staff})
             serializer.is_valid(raise_exception=True)
             return JsonResponse(serializer.data, status=200, safe=False)
         else:
@@ -130,3 +130,22 @@ class PingAPIView(APIView):
         success_serializer = SuccessSerializer(data={'success': True})
         success_serializer.is_valid(raise_exception=True)
         return JsonResponse(success_serializer.data, status=200, safe=False)
+
+
+class UsersAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        summary="Get users",
+        responses={
+            200: UsersSerializer(many=True)})
+    def get(self, request):
+        users = User.objects.all()
+
+        user_array = []
+        for user in users:
+            serializer = UsersSerializer(data=user.__dict__)
+            serializer.is_valid(raise_exception=True)
+            user_array.append(serializer.data)
+
+        return JsonResponse(user_array, status=200, safe=False)

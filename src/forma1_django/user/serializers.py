@@ -8,6 +8,7 @@ class PostLoginSerializer(serializers.Serializer):
 class LoginSerializer(serializers.Serializer):
     jwt_token = serializers.CharField(max_length=255, required=True)
     refresh_token = serializers.CharField(max_length=255, required=True)
+    is_admin = serializers.BooleanField(required=False)
 
 class PostRegistrationSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=255, required=True)
@@ -29,4 +30,9 @@ class LanguageSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=True)
     name = serializers.CharField(max_length=255, required=True)
     code = serializers.CharField(max_length=255, required=True)
+
+
+class UsersSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=True)
+    nickname = serializers.CharField(max_length=255, required=True)
 

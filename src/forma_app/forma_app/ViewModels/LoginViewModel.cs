@@ -71,12 +71,14 @@ namespace forma_app.ViewModels
                 Login? response = await ApiService.UserEndpoint.UserLoginCreateAsync(new PostLoginRequest(Email, Password)).ConfigureAwait(false);
                 if (response == null)
                 {
-                    await Toast.Make("User or password incorrect or server is down.").Show();
+                    MainThread.BeginInvokeOnMainThread(async () => await Toast.Make("User or password incorrect or server is down.").Show());
+                    
                     return;
                 }
                 ApiService.DataApi.Configuration.AccessToken = response.JwtToken;
                 ApiService.TipsApi.Configuration.AccessToken = response.JwtToken;
                 ApiService.StatisticApi.Configuration.AccessToken = response.JwtToken;
+                ApiService.IsAdmin = response.IsAdmin;
                 if (StoreService.RememberMe)
                 {
                     StoreService.Email = Email;
@@ -96,7 +98,11 @@ namespace forma_app.ViewModels
             }
             catch (ApiException)
             {
-                await Toast.Make("User or password incorrect or server is down.").Show();
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    await Toast.Make("User or password incorrect or server is down.").Show();
+                });
+               
             }
 
             
@@ -115,7 +121,11 @@ namespace forma_app.ViewModels
                 }
                 else
                 {
-                    await Toast.Make("Server is down").Show();
+                    MainThread.BeginInvokeOnMainThread(async () =>
+                    {
+                        await Toast.Make("Server is down").Show();
+                    });
+                            
                     return;
                 }
             }

@@ -81,7 +81,7 @@ class AnswerAPIView(APIView):
 
 
 class RaceResultAPIView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = [IsAuthenticated]
     @extend_schema(
         summary="Get race result",
         responses={
@@ -117,9 +117,9 @@ class RaceResultAPIView(APIView):
         if answer is None:
             answer = f1_race_result()
 
-        for key in serializer.validated_data:
+        for key, value in serializer.validated_data.items():
             if hasattr(answer, key):
-                setattr(answer, key, serializer.validated_data[key])
+                setattr(answer, key, value)
 
         answer.save()
 

@@ -7,8 +7,9 @@ from rest_framework.views import APIView
 from details.models import f1_race
 from f1_statistic.models import f1_user_score
 from f1_statistic.serializers import PostCompareSerializer, GetUserScoreSerializer, UserScoreStatisticsSerializer
-from f1_statistic.signals import calculate_and_update_user_scores
+from f1_statistic.signals import calculate_and_update_user_scores, has_closest_number, get_group_2_answers_by_race
 from tips.models import f1_race_result, f1_answer, f1_question
+from tips.signals import get_question_data
 from user.models import User
 from user.serializers import SuccessSerializer
 
@@ -34,17 +35,53 @@ class CompareAPIView(APIView):
 
                 for user_answer in user_answers:
                     user = user_answer.user
-                    answer = user_answer.answer
-                    # Compare user answer with the correct answer
-                    if answer == correct_answer:
-                        calculate_and_update_user_scores(user, question, correct_answer, answer)
-                        # Append success response for each correct answer
-                        questions_array.append(
-                            {"user": user.username, "question": question.question, "status": "correct"})
+                    question = user_answer.question
+
+                    if question.group_id != 2:
+                        if question.is_number is False:
+                            calculate_and_update_user_scores(user, question, correct_answer, user_answer)
+                        elif question.is_number is True and question.closest_number is False:
+                            calculate_and_update_user_scores(user, question, correct_answer, user_answer)
+
+                        elif question.is_number is True and question.closest_number is True:
+                            is_closest_number = has_closest_number( correct_answer, user_answer)
+
+                            if is_closest_number is True:
+                                f1_user_score.objects.update_or_create(
+                                    user=user,
+                                    answer=user_answer,
+                                    score=1
+                                )
+                            else:
+                                f1_user_score.objects.update_or_create(
+                                    user=user,
+                                    answer=user_answer,
+                                    score=0
+                                )
                     else:
-                        # Append failure response for incorrect answers
-                        questions_array.append(
-                            {"user": user.username, "question": question.question, "status": "incorrect"})
+
+                        # Collect all answers for group_id = 2 within the current race
+                        group_2_answers = get_group_2_answers_by_race(race_id)
+
+                        # Check if the user's answer is in the collected group 2 answers for this race
+                        if user_answer.answer in group_2_answers:
+                            # The user scores 1 if their answer is in the group 2 answers for the current race
+                            f1_user_score.objects.update_or_create(
+                                user=user,
+                                answer=user_answer,
+                                score=1
+                            )
+                        else:
+                            # The user scores 0 if their answer is not in the group 2 answers for the current race
+                            f1_user_score.objects.update_or_create(
+                                user=user,
+                                answer=user_answer,
+                                score=0
+                            )
+
+
+
+
 
             return JsonResponse({"success": True}, status=200)
         else:
@@ -57,7 +94,7 @@ class GetStatisticsAPIView(APIView):
         summary="Get statistics",
         parameters=[GetUserScoreSerializer],
         responses={
-            200: SuccessSerializer(many=True)})
+            200: UserScoreStatisticsSerializer(many=True)})
     def get(self, request):
         serializer = GetUserScoreSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
@@ -70,7 +107,7 @@ class GetStatisticsAPIView(APIView):
 
         for user in users:
             user_data = {
-                'user': user.username,
+                'user': user.email,
                 'scores': []
             }
 
@@ -92,10 +129,10 @@ class GetStatisticsAPIView(APIView):
                 questions = f1_question.objects.all()
                 for question in questions:
                     score = \
-                    f1_user_score.objects.filter(user=user, answer=question).aggregate(total_score=Sum('score'))[
+                    f1_user_score.objects.filter(user=user, answer__question=question).aggregate(total_score=Sum('score'))[
                         'total_score']
                     if score:
-                        user_data['scores'].append({'score': score, 'detail': question.question})
+                        user_data['scores'].append({'score': score, 'detail': get_question_data(question, user.language_id)})
 
             statistics_data.append(user_data)
 

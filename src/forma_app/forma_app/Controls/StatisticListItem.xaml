@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:model="clr-namespace:forma_app.Model"
+             x:Class="forma_app.Controls.StatisticListItem"
+             x:DataType="model:UserScoreStatistics"
+             xmlns:syncfusion="clr-namespace:Syncfusion.Maui.ListView;assembly=Syncfusion.Maui.ListView"
+             xmlns:controls="clr-namespace:forma_app.Controls">
+    <Grid ColumnDefinitions="*,*">
+        <Label Text="{Binding User}"></Label>
+
+        
+
+        <syncfusion:SfListView   HorizontalOptions="Center" 
+                                 ItemsSource="{Binding Scores}" Grid.Column="1" >
+            <syncfusion:SfListView.ItemTemplate>
+                <DataTemplate>
+                    <StackLayout>
+                        <controls:StatisticScoreListItem ></controls:StatisticScoreListItem>
+
+                    </StackLayout>
+                </DataTemplate>
+            </syncfusion:SfListView.ItemTemplate>
+        </syncfusion:SfListView>
+    </Grid>
+</ContentView>

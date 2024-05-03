@@ -7,7 +7,7 @@
              xmlns:syncfusion="clr-namespace:Syncfusion.Maui.ListView;assembly=Syncfusion.Maui.ListView"
              x:Class="forma_app.Pages.QaPage"
              x:DataType="viewModels:QaViewModel">
-    
+    <Grid>
         <VerticalStackLayout Spacing="25" Padding="30" HorizontalOptions="Center">
            
         <Label Text="Question and Answer" FontSize="30" HorizontalOptions="Center" />
@@ -46,5 +46,11 @@
                 </syncfusion:SfListView>
         </ScrollView>
         </VerticalStackLayout>
-    
+    <core:SfBusyIndicator x:Name="busyIndicator"
+                          IsRunning="{Binding IsBusy}"
+                          AnimationType="CircularMaterial" 
+                          IsVisible="{Binding IsBusy}"
+                          BackgroundColor="DarkGray"
+                          Opacity="0.3"/>
+    </Grid>
 </ContentPage>

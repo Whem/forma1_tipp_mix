@@ -13,6 +13,8 @@ namespace forma_app
             Routing.RegisterRoute(nameof(QaPage), typeof(QaPage));
             Routing.RegisterRoute(nameof(StatisticsPage), typeof(StatisticsPage));
             Routing.RegisterRoute(nameof(QaSummaryPage), typeof(QaSummaryPage));
+            Routing.RegisterRoute(nameof(FillResultPage), typeof(FillResultPage));
+            Routing.RegisterRoute(nameof(ComparePage), typeof(ComparePage));
 
 
         }
