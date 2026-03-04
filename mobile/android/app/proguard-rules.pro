@@ -1,0 +1,5 @@
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.google.** { *; }
+-dontwarn com.google.**
+-keep class io.flutter.** { *; }

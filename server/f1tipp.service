@@ -1,0 +1,19 @@
+[Unit]
+Description=F1 Tipp Mix Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/f1-tipp-server
+ExecStart=/root/f1-tipp-server/venv/bin/python main.py --all
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=f1tipp
+
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

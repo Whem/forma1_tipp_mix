@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1 Tipp Mix</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d0d1a;
+  --surface:#151528;
+  --card:#1a1a35;
+  --cyan:#5ce1e6;
+  --red:#e10600;
+  --white:#f0f0f5;
+  --gray:#8888aa;
+}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--white);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+.bg-grid{
+  position:fixed;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(92,225,230,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(92,225,230,0.03) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+
+.glow-orb{
+  position:fixed;border-radius:50%;filter:blur(120px);opacity:0.15;z-index:0;pointer-events:none;
+}
+.glow-1{width:500px;height:500px;background:var(--cyan);top:-150px;left:-100px;}
+.glow-2{width:400px;height:400px;background:var(--red);bottom:-100px;right:-100px;}
+
+.lang-switch{
+  position:fixed;top:16px;right:16px;z-index:10;
+  display:flex;gap:4px;
+  background:var(--card);
+  border:1px solid rgba(92,225,230,0.15);
+  border-radius:10px;padding:4px;
+}
+.lang-btn{
+  background:none;border:none;color:var(--gray);
+  font-size:0.85rem;font-weight:700;
+  padding:6px 14px;border-radius:8px;cursor:pointer;
+  transition:all 0.2s;letter-spacing:0.5px;
+}
+.lang-btn.active{
+  background:var(--red);color:#fff;
+}
+.lang-btn:hover:not(.active){color:var(--white);}
+
+.container{
+  position:relative;z-index:1;
+  max-width:800px;margin:0 auto;padding:40px 24px;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100vh;justify-content:center;gap:36px;
+}
+
+.logo-wrap{
+  width:140px;height:140px;
+  background:var(--card);
+  border-radius:28px;
+  border:2px solid rgba(92,225,230,0.2);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 60px rgba(92,225,230,0.1);
+  animation:float 4s ease-in-out infinite;
+}
+.logo-wrap img{width:110px;height:auto;filter:drop-shadow(0 0 20px rgba(92,225,230,0.3));}
+
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-12px)}
+}
+
+h1{
+  font-size:clamp(2rem,5vw,3.2rem);
+  font-weight:900;text-align:center;
+  letter-spacing:-1px;line-height:1.1;
+}
+h1 .accent{color:var(--red);}
+h1 .cyan{color:var(--cyan);}
+
+.subtitle{
+  font-size:1.1rem;color:var(--gray);text-align:center;
+  max-width:500px;line-height:1.6;
+}
+
+.countdown-section{text-align:center;}
+.countdown-label{
+  font-size:0.85rem;text-transform:uppercase;letter-spacing:3px;
+  color:var(--cyan);margin-bottom:16px;font-weight:600;
+}
+.countdown{
+  display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+}
+.cd-unit{
+  background:var(--card);
+  border:1px solid rgba(92,225,230,0.15);
+  border-radius:16px;
+  padding:20px 16px;min-width:80px;
+  text-align:center;
+  backdrop-filter:blur(10px);
+  transition:transform 0.3s,border-color 0.3s;
+}
+.cd-unit:hover{transform:scale(1.05);border-color:var(--cyan);}
+.cd-num{
+  font-size:2.4rem;font-weight:900;
+  background:linear-gradient(135deg,var(--white),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  line-height:1;
+}
+.cd-label{
+  font-size:0.7rem;text-transform:uppercase;letter-spacing:2px;
+  color:var(--gray);margin-top:6px;
+}
+
+.race-info{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card);
+  border:1px solid rgba(225,6,0,0.2);
+  border-radius:12px;padding:14px 24px;
+  font-size:0.95rem;
+}
+.race-flag{font-size:1.5rem;}
+.race-name{font-weight:700;}
+.race-date{color:var(--gray);font-size:0.85rem;}
+
+.download-btn{
+  display:inline-flex;align-items:center;gap:12px;
+  background:linear-gradient(135deg,var(--red),#c00500);
+  color:#fff;text-decoration:none;
+  font-size:1.15rem;font-weight:700;
+  padding:18px 40px;border-radius:16px;
+  border:none;cursor:pointer;
+  box-shadow:0 8px 32px rgba(225,6,0,0.3);
+  transition:transform 0.2s,box-shadow 0.2s;
+  letter-spacing:0.5px;
+}
+.download-btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(225,6,0,0.4);
+}
+.download-btn:active{transform:translateY(0);}
+.download-btn svg{width:24px;height:24px;fill:#fff;}
+
+.download-info{
+  font-size:0.8rem;color:var(--gray);text-align:center;
+}
+
+.whats-new{
+  background:var(--card);
+  border:1px solid rgba(92,225,230,0.12);
+  border-radius:16px;padding:24px;
+  width:100%;max-width:650px;
+}
+.whats-new-title{
+  font-size:1rem;font-weight:700;margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.whats-new-title span{color:var(--cyan);}
+.whats-new ul{
+  list-style:none;padding:0;
+}
+.whats-new li{
+  font-size:0.88rem;color:var(--gray);
+  padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);
+  display:flex;align-items:center;gap:8px;
+}
+.whats-new li:last-child{border-bottom:none;}
+.whats-new li::before{content:'';display:none;}
+.wn-icon{font-size:1rem;flex-shrink:0;}
+
+.features{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px;width:100%;max-width:650px;
+}
+.feat{
+  background:var(--card);
+  border:1px solid rgba(92,225,230,0.08);
+  border-radius:14px;padding:20px;
+  text-align:center;
+  transition:border-color 0.3s,transform 0.3s;
+}
+.feat:hover{border-color:rgba(92,225,230,0.25);transform:translateY(-4px);}
+.feat-icon{font-size:2rem;margin-bottom:8px;}
+.feat-title{font-weight:700;font-size:0.95rem;margin-bottom:4px;}
+.feat-desc{font-size:0.8rem;color:var(--gray);line-height:1.4;}
+
+.footer{
+  font-size:0.75rem;color:var(--gray);text-align:center;
+  padding-top:24px;border-top:1px solid rgba(255,255,255,0.05);
+  width:100%;
+}
+
+.pulse{animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{
+  0%,100%{box-shadow:0 8px 32px rgba(225,6,0,0.3)}
+  50%{box-shadow:0 8px 48px rgba(225,6,0,0.5)}
+}
+
+@media(max-width:480px){
+  .cd-unit{min-width:65px;padding:14px 10px;}
+  .cd-num{font-size:1.8rem;}
+  .download-btn{padding:16px 28px;font-size:1rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="glow-orb glow-1"></div>
+<div class="glow-orb glow-2"></div>
+
+<div class="lang-switch">
+  <button class="lang-btn" id="btn-hu" onclick="setLang('hu')">HU</button>
+  <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+</div>
+
+<div class="container">
+
+  <div class="logo-wrap">
+    <img src="/landing/logo.png" alt="F1 Tipp Mix" id="logo-img">
+  </div>
+
+  <h1>
+    <span class="accent">F1</span> Tipp <span class="cyan">Mix</span>
+  </h1>
+
+  <p class="subtitle" id="txt-subtitle"></p>
+
+  <div class="countdown-section">
+    <div class="countdown-label" id="txt-countdown-label"></div>
+    <div class="countdown" id="countdown">
+      <div class="cd-unit"><div class="cd-num" id="cd-days">--</div><div class="cd-label" id="lbl-days"></div></div>
+      <div class="cd-unit"><div class="cd-num" id="cd-hours">--</div><div class="cd-label" id="lbl-hours"></div></div>
+      <div class="cd-unit"><div class="cd-num" id="cd-mins">--</div><div class="cd-label" id="lbl-mins"></div></div>
+      <div class="cd-unit"><div class="cd-num" id="cd-secs">--</div><div class="cd-label" id="lbl-secs"></div></div>
+    </div>
+  </div>
+
+  <div class="race-info">
+    <span class="race-flag">&#x1F1E6;&#x1F1FA;</span>
+    <div>
+      <div class="race-name" id="txt-race-name"></div>
+      <div class="race-date" id="txt-race-date"></div>
+    </div>
+  </div>
+
+  <a href="/releases/f1tippmix.apk" class="download-btn pulse" id="dl-btn">
+    <svg viewBox="0 0 24 24"><path d="M17 18v1H6v-1h11zm-.5-6.6l-3.57 3.56V3h-1.86v11.96L7.5 11.4 6.18 12.72 12 18.54l5.82-5.82z"/></svg>
+    <span id="txt-download"></span>
+  </a>
+  <div class="download-info" id="txt-dl-info"></div>
+
+  <div class="whats-new">
+    <div class="whats-new-title">&#x1F195; <span id="txt-whats-new-title"></span></div>
+    <ul id="whats-new-list"></ul>
+  </div>
+
+  <div class="features" id="features-grid"></div>
+
+  <div class="footer" id="txt-footer"></div>
+
+</div>
+
+<script>
+const i18n = {
+  hu: {
+    title: 'F1 Tipp Mix - Formula 1 Tippjáték',
+    subtitle: 'Tippelj a futameredményekre, gyűjts pontokat, versenyzz a barátaiddal — és éld át az F1 szezon minden izgalmát!',
+    countdownLabel: 'Az első futamig hátra van',
+    countdownDone: 'A szezon elkezdődött!',
+    days: 'nap', hours: 'óra', mins: 'perc', secs: 'mp',
+    raceName: 'Ausztrál Nagydíj — Melbourne',
+    raceDate: '2026. március 8., vasárnap',
+    download: 'APK Letöltés',
+    dlInfo: 'Android 6.0+ \u2022 v2.3.0 \u2022 ~68 MB',
+    whatsNewTitle: 'Újdonságok a v2.3.0-ban',
+    whatsNew: [
+      {icon: '👥', text: 'Barát-csoportok — hozz létre csoportokat és hívd meg a barátaidat FriendCode-dal!'},
+      {icon: '🤖', text: 'AI kategória — regisztrációnál jelölheted, ha AI segítséget használsz, külön ranglistán versenyzel'},
+      {icon: '📊', text: 'Kettős ranglista — Globális (Emberi/AI/Mind szűrő) és Csoportok nézet'},
+      {icon: '🔔', text: 'In-app értesítések — csoportmeghívók, elfogadások, olvasatlan badge'},
+      {icon: '🆔', text: 'FriendCode rendszer — egyedi 6 karakteres kód másolással és megosztással'},
+      {icon: '❤️', text: 'Támogatás szekció — Revolut és Bitcoin donation opciók a profilban'},
+      {icon: '🤖', text: 'FormaAI — AI ellenfél minden futamra és szezon tippre'},
+      {icon: '🃏', text: 'Joker rendszer — dupla pont kedvenc futamodra'},
+    ],
+    features: [
+      {icon: '👥', title: 'Barát-csoportok', desc: 'Hozz létre csoportokat, hívd meg barátaidat'},
+      {icon: '🤖', title: 'Győzd le az AI-t', desc: 'FormaAI minden futamra tippel — te jobb vagy?'},
+      {icon: '🏆', title: 'Tippelj', desc: 'Podium, pole, leggyorsabb kör — minden futamra'},
+      {icon: '🔥', title: 'Streak & Joker', desc: 'Sorozat bónusz és joker a dupla pontokért'},
+      {icon: '📊', title: 'Élő ranglista', desc: 'Globális és csoport ranglista valós időben'},
+      {icon: '🏎️', title: 'Élő futam', desc: 'Valós idejű pozíciók futam közben'},
+      {icon: '🏅', title: 'Achievementek', desc: 'Teljesítmények és kitűzők gyűjtése'},
+      {icon: '🔔', title: 'Push értesítés', desc: 'Emlékeztető a rajt előtt és frissítéseknél'},
+      {icon: '🌙', title: 'Sötét téma', desc: 'Szemkímélő, modern F1-es dizájn'},
+    ],
+    footer: '&copy; 2026 F1 Tipp Mix &bull; Nem hivatalos F1 alkalmazás',
+  },
+  en: {
+    title: 'F1 Tipp Mix - Formula 1 Prediction Game',
+    subtitle: 'Predict race results, collect points, compete with your friends — and experience every thrill of the F1 season!',
+    countdownLabel: 'Time until the first race',
+    countdownDone: 'The season has started!',
+    days: 'days', hours: 'hrs', mins: 'min', secs: 'sec',
+    raceName: 'Australian Grand Prix — Melbourne',
+    raceDate: 'Sunday, March 8, 2026',
+    download: 'Download APK',
+    dlInfo: 'Android 6.0+ \u2022 v2.3.0 \u2022 ~68 MB',
+    whatsNewTitle: "What's new in v2.3.0",
+    whatsNew: [
+      {icon: '👥', text: 'Friend groups — create groups and invite friends with FriendCode!'},
+      {icon: '🤖', text: 'AI category — mark AI assistance at registration, compete in a separate leaderboard'},
+      {icon: '📊', text: 'Dual leaderboard — Global (Human/AI/All filter) and Group views'},
+      {icon: '🔔', text: 'In-app notifications — group invites, acceptances, unread badge'},
+      {icon: '🆔', text: 'FriendCode system — unique 6-character code with copy and share'},
+      {icon: '❤️', text: 'Support section — Revolut and Bitcoin donation options in profile'},
+      {icon: '🤖', text: 'FormaAI — AI opponent for every race and season prediction'},
+      {icon: '🃏', text: 'Joker system — double points on your favorite race'},
+    ],
+    features: [
+      {icon: '👥', title: 'Friend Groups', desc: 'Create groups, invite friends via FriendCode'},
+      {icon: '🤖', title: 'Beat the AI', desc: 'FormaAI predicts every race — are you better?'},
+      {icon: '🏆', title: 'Predict', desc: 'Podium, pole, fastest lap — every race'},
+      {icon: '🔥', title: 'Streak & Joker', desc: 'Streak bonuses and joker for double points'},
+      {icon: '📊', title: 'Live standings', desc: 'Global and group leaderboards in real time'},
+      {icon: '🏎️', title: 'Live race', desc: 'Real-time positions during the race'},
+      {icon: '🏅', title: 'Achievements', desc: 'Collect performance badges'},
+      {icon: '🔔', title: 'Push notifications', desc: 'Reminders before start and for updates'},
+      {icon: '🌙', title: 'Dark theme', desc: 'Eye-friendly, modern F1-inspired design'},
+    ],
+    footer: '&copy; 2026 F1 Tipp Mix &bull; Unofficial F1 application',
+  }
+};
+
+let currentLang = 'hu';
+
+function detectLang() {
+  const nav = navigator.language || navigator.userLanguage || 'en';
+  return nav.toLowerCase().startsWith('hu') ? 'hu' : 'en';
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('f1tm_lang', lang);
+  render();
+}
+
+function render() {
+  const t = i18n[currentLang];
+  document.documentElement.lang = currentLang;
+  document.title = t.title;
+
+  document.getElementById('btn-hu').classList.toggle('active', currentLang === 'hu');
+  document.getElementById('btn-en').classList.toggle('active', currentLang === 'en');
+
+  document.getElementById('txt-subtitle').textContent = t.subtitle;
+  document.getElementById('txt-countdown-label').textContent = t.countdownLabel;
+  document.getElementById('lbl-days').textContent = t.days;
+  document.getElementById('lbl-hours').textContent = t.hours;
+  document.getElementById('lbl-mins').textContent = t.mins;
+  document.getElementById('lbl-secs').textContent = t.secs;
+  document.getElementById('txt-race-name').textContent = t.raceName;
+  document.getElementById('txt-race-date').textContent = t.raceDate;
+  document.getElementById('txt-download').textContent = t.download;
+  document.getElementById('txt-dl-info').textContent = t.dlInfo;
+  document.getElementById('txt-whats-new-title').textContent = t.whatsNewTitle;
+  document.getElementById('txt-footer').innerHTML = t.footer;
+
+  const wnList = document.getElementById('whats-new-list');
+  wnList.innerHTML = t.whatsNew.map(item =>
+    `<li><span class="wn-icon">${item.icon}</span>${item.text}</li>`
+  ).join('');
+
+  const featGrid = document.getElementById('features-grid');
+  featGrid.innerHTML = t.features.map(f =>
+    `<div class="feat">
+      <div class="feat-icon">${f.icon}</div>
+      <div class="feat-title">${f.title}</div>
+      <div class="feat-desc">${f.desc}</div>
+    </div>`
+  ).join('');
+}
+
+const saved = localStorage.getItem('f1tm_lang');
+currentLang = saved || detectLang();
+render();
+
+const TARGET = new Date('2026-03-08T05:00:00Z');
+
+function updateCountdown() {
+  const t = i18n[currentLang];
+  const now = new Date();
+  let diff = TARGET - now;
+
+  if (diff <= 0) {
+    document.getElementById('cd-days').textContent = '0';
+    document.getElementById('cd-hours').textContent = '0';
+    document.getElementById('cd-mins').textContent = '0';
+    document.getElementById('cd-secs').textContent = '0';
+    document.getElementById('txt-countdown-label').textContent = t.countdownDone;
+    return;
+  }
+
+  const d = Math.floor(diff / 86400000); diff %= 86400000;
+  const h = Math.floor(diff / 3600000);  diff %= 3600000;
+  const m = Math.floor(diff / 60000);    diff %= 60000;
+  const s = Math.floor(diff / 1000);
+
+  document.getElementById('cd-days').textContent = d;
+  document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
+  document.getElementById('cd-mins').textContent = String(m).padStart(2,'0');
+  document.getElementById('cd-secs').textContent = String(s).padStart(2,'0');
+}
+
+updateCountdown();
+setInterval(updateCountdown, 1000);
+</script>
+
+</body>
+</html>

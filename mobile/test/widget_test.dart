@@ -1,0 +1,18 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:forma1_tipp/src/app.dart';
+
+void main() {
+  testWidgets('App starts and shows auth flow', (WidgetTester tester) async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+
+    await tester.pumpWidget(
+      const ProviderScope(child: App()),
+    );
+
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(MaterialApp), findsOneWidget);
+  });
+}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "665311372347",
+    "project_id": "forma1mix",
+    "storage_bucket": "forma1mix.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:665311372347:android:dab89e4fc546286ab8e81e",
+        "android_client_info": {
+          "package_name": "hu.forma1.tipp.forma1_tipp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFKOEtUplFLIJszeHnGVpfKABQzJc-Krw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
