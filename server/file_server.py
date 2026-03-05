@@ -168,7 +168,8 @@ class FileHandler(SimpleHTTPRequestHandler):
 
     def _serve_landing(self):
         landing_dir = os.path.join(SCRIPT_DIR, "landing")
-        req_path = self.path.replace("/landing", "", 1).lstrip("/") or "index.html"
+        clean = urlparse(self.path).path
+        req_path = clean.replace("/landing", "", 1).lstrip("/") or "index.html"
         filepath = os.path.join(landing_dir, req_path)
         if not os.path.exists(filepath):
             self.send_error(404, "Not found")
