@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final pushNotificationServiceProvider =
     Provider<PushNotificationService>((ref) => PushNotificationService());
@@ -34,9 +35,16 @@ class PushNotificationService {
 
     await _messaging.subscribeToTopic('all_users');
     await _messaging.subscribeToTopic('app_updates');
+    await _messaging.subscribeToTopic('race_reminder_hu');
+    await _messaging.subscribeToTopic('race_reminder_en');
+    await _messaging.subscribeToTopic('results_hu');
+    await _messaging.subscribeToTopic('results_en');
 
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageTap);
+
+    final initial = await _messaging.getInitialMessage();
+    if (initial != null) _handleMessageTap(initial);
   }
 
   Future<void> _saveToken(String uid, String token) async {
@@ -59,6 +67,18 @@ class PushNotificationService {
   void _handleMessageTap(RemoteMessage message) {
     if (kDebugMode) {
       print('[FCM] Message tap: ${message.data}');
+    }
+    final type = message.data['type'];
+    final url = message.data['url'];
+    if (type == 'app_update' && url != null) {
+      _openUrl(url);
+    }
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 }

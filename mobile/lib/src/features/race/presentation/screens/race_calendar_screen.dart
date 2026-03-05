@@ -152,7 +152,7 @@ class _NextRaceHeroCardState extends State<_NextRaceHeroCard> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'KÖVETKEZŐ',
+                    Localizations.localeOf(context).languageCode == 'hu' ? 'KÖVETKEZŐ' : 'NEXT',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
@@ -186,7 +186,9 @@ class _NextRaceHeroCardState extends State<_NextRaceHeroCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.race.nameHu,
+                        Localizations.localeOf(context).languageCode == 'hu'
+                          ? widget.race.nameHu
+                          : widget.race.nameEn,
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium
@@ -213,10 +215,10 @@ class _NextRaceHeroCardState extends State<_NextRaceHeroCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _CountdownUnit(value: days, label: 'nap'),
-                _CountdownUnit(value: hours, label: 'óra'),
-                _CountdownUnit(value: minutes, label: 'perc'),
-                _CountdownUnit(value: seconds, label: 'mp'),
+                _CountdownUnit(value: days, label: Localizations.localeOf(context).languageCode == 'hu' ? 'nap' : 'day'),
+                _CountdownUnit(value: hours, label: Localizations.localeOf(context).languageCode == 'hu' ? 'óra' : 'hr'),
+                _CountdownUnit(value: minutes, label: Localizations.localeOf(context).languageCode == 'hu' ? 'perc' : 'min'),
+                _CountdownUnit(value: seconds, label: Localizations.localeOf(context).languageCode == 'hu' ? 'mp' : 'sec'),
               ],
             )
                 .animate()
@@ -229,7 +231,7 @@ class _NextRaceHeroCardState extends State<_NextRaceHeroCard> {
                 onPressed: () =>
                     context.push('/race/${widget.race.id}/predict'),
                 icon: const Icon(Icons.edit_note),
-                label: const Text('Tippelj!'),
+                label: Text(Localizations.localeOf(context).languageCode == 'hu' ? 'Tippelj!' : 'Predict!'),
               ),
             ),
           ],
@@ -325,7 +327,9 @@ class _RaceCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  race.nameHu,
+                  Localizations.localeOf(context).languageCode == 'hu'
+                      ? race.nameHu
+                      : race.nameEn,
                   style: Theme.of(context)
                       .textTheme
                       .titleSmall
@@ -354,7 +358,7 @@ class _RaceCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                'ÉLŐ',
+                Localizations.localeOf(context).languageCode == 'hu' ? 'ÉLŐ' : 'LIVE',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
@@ -371,7 +375,7 @@ class _RaceCard extends StatelessWidget {
             )
           else
             Text(
-              'Tippelj!',
+              Localizations.localeOf(context).languageCode == 'hu' ? 'Tippelj!' : 'Predict!',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: AppColors.f1Turquoise,
                     fontWeight: FontWeight.w700,

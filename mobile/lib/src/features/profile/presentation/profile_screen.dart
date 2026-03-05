@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -18,6 +19,7 @@ import 'package:forma1_tipp/src/core/providers/theme_provider.dart';
 import 'package:forma1_tipp/src/core/widgets/app_gradient_background.dart';
 import 'package:forma1_tipp/src/core/widgets/glass_card.dart';
 import 'package:forma1_tipp/src/features/auth/presentation/auth_controller.dart';
+import 'package:forma1_tipp/src/features/auth/data/auth_repository.dart';
 import 'package:forma1_tipp/src/features/gamification/domain/achievement.dart';
 import 'package:forma1_tipp/src/features/profile/data/profile_repository.dart';
 
@@ -37,28 +39,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _uploading = false;
 
   Future<void> _pickAndUploadAvatar(String uid) async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512);
-    if (picked == null) return;
-
-    final cropped = await ImageCropper().cropImage(
-      sourcePath: picked.path,
-      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Crop Avatar',
-          toolbarColor: AppColors.f1DarkBg,
-          toolbarWidgetColor: Colors.white,
-          lockAspectRatio: true,
-        ),
-        IOSUiSettings(title: 'Crop Avatar', aspectRatioLockEnabled: true),
-      ],
-    );
-    if (cropped == null) return;
-
-    setState(() => _uploading = true);
     try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512);
+      if (picked == null) return;
+
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Avatar',
+            toolbarColor: AppColors.f1DarkBg,
+            toolbarWidgetColor: Colors.white,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(title: 'Crop Avatar', aspectRatioLockEnabled: true),
+        ],
+      );
+      if (cropped == null) return;
+
+      setState(() => _uploading = true);
+      final oldUrl = ref.read(currentUserProvider).valueOrNull?.avatarUrl;
+      if (oldUrl != null) {
+        await DefaultCacheManager().removeFile(oldUrl);
+      }
       await ref.read(profileRepositoryProvider).uploadAvatar(uid, File(cropped.path));
+      ref.invalidate(currentUserProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Avatar updated!')),
@@ -67,7 +74,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e')),
+          SnackBar(content: Text('Avatar error: $e')),
         );
       }
     } finally {
@@ -77,8 +84,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider).valueOrNull;
-    final user = authState?.appUser;
+    final user = ref.watch(currentUserProvider).valueOrNull;
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -446,7 +452,7 @@ class _AchievementShowcase extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
-            'Achievements',
+            lang == 'hu' ? 'Eredmények' : 'Achievements',
             style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),

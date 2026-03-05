@@ -1,0 +1,55 @@
+import 'package:flutter/material.dart';
+
+/// Convert a Material Icon name string (e.g. "fitness_center") to an IconData.
+/// Falls back to Icons.emoji_events if the name is not found.
+IconData materialIconFromName(String name) {
+  return _iconMap[name] ?? Icons.emoji_events;
+}
+
+const Map<String, IconData> _iconMap = {
+  'fitness_center': Icons.fitness_center,
+  'emoji_events': Icons.emoji_events,
+  'auto_awesome': Icons.auto_awesome,
+  'psychology': Icons.psychology,
+  'sports_score': Icons.sports_score,
+  'casino': Icons.casino,
+  'military_tech': Icons.military_tech,
+  'looks': Icons.looks,
+  'whatshot': Icons.whatshot,
+  'bolt': Icons.bolt,
+  'star': Icons.star,
+  'diamond': Icons.diamond,
+  'rocket_launch': Icons.rocket_launch,
+  'local_fire_department': Icons.local_fire_department,
+  'workspace_premium': Icons.workspace_premium,
+  'grade': Icons.grade,
+  'shield': Icons.shield,
+  'speed': Icons.speed,
+  'timer': Icons.timer,
+  'flag': Icons.flag,
+  'celebration': Icons.celebration,
+  'trending_up': Icons.trending_up,
+  'verified': Icons.verified,
+  'thumb_up': Icons.thumb_up,
+  'favorite': Icons.favorite,
+  'sports_motorsports': Icons.sports_motorsports,
+  'emoji_objects': Icons.emoji_objects,
+  'lightbulb': Icons.lightbulb,
+  'flash_on': Icons.flash_on,
+  'all_inclusive': Icons.all_inclusive,
+  'accessibility_new': Icons.accessibility_new,
+  'account_balance': Icons.account_balance,
+  'gavel': Icons.gavel,
+  'insights': Icons.insights,
+  'leaderboard': Icons.leaderboard,
+  'emoji_people': Icons.emoji_people,
+  'diversity_3': Icons.diversity_3,
+  'group': Icons.group,
+  'handshake': Icons.handshake,
+  'trophy': Icons.emoji_events,
+  'lock_open': Icons.lock_open,
+  'public': Icons.public,
+  'task_alt': Icons.task_alt,
+  'check_circle': Icons.check_circle,
+  'done_all': Icons.done_all,
+};

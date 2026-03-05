@@ -64,6 +64,8 @@ class AuthRepository {
     required String displayName,
     required String language,
     bool isAIAssisted = false,
+    String? aiModelName,
+    String? aiPrompt,
   }) async {
     final credential = await _auth.createUserWithEmailAndPassword(
       email: email,
@@ -84,7 +86,15 @@ class AuthRepository {
       createdAt: DateTime.now(),
     );
 
-    await _usersCol.doc(credential.user!.uid).set(appUser.toFirestore());
+    final userData = appUser.toFirestore();
+    if (isAIAssisted && aiModelName != null) {
+      userData['aiModelName'] = aiModelName;
+    }
+    if (isAIAssisted && aiPrompt != null) {
+      userData['aiPrompt'] = aiPrompt;
+    }
+
+    await _usersCol.doc(credential.user!.uid).set(userData);
 
     return credential;
   }

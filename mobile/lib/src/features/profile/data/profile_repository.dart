@@ -8,7 +8,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:forma1_tipp/src/features/auth/data/auth_repository.dart';
 import 'package:forma1_tipp/src/features/gamification/domain/achievement.dart';
 
-const String _fileServerBase = 'https://liggin.xyz';
+const String _fileServerBase = 'https://f1.liggin.xyz';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository(firestore: ref.watch(firestoreProvider));
@@ -25,12 +25,29 @@ class ProfileRepository {
       final uri =
           Uri.parse('$_fileServerBase/upload/avatar?uid=$uid');
       final request = http.MultipartRequest('POST', uri);
-      final ext = imageFile.path.split('.').last.toLowerCase();
-      final mediaType = ext == 'jpg' || ext == 'jpeg'
-          ? MediaType('image', 'jpeg')
-          : ext == 'webp'
-              ? MediaType('image', 'webp')
-              : MediaType('image', 'png');
+
+      final pathLower = imageFile.path.toLowerCase();
+      final String ext;
+      final MediaType mediaType;
+      if (pathLower.endsWith('.jpg') || pathLower.endsWith('.jpeg')) {
+        ext = 'jpg';
+        mediaType = MediaType('image', 'jpeg');
+      } else if (pathLower.endsWith('.webp')) {
+        ext = 'webp';
+        mediaType = MediaType('image', 'webp');
+      } else if (pathLower.endsWith('.png')) {
+        ext = 'png';
+        mediaType = MediaType('image', 'png');
+      } else {
+        final bytes = await imageFile.openRead(0, 4).first;
+        if (bytes.length >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) {
+          ext = 'jpg';
+          mediaType = MediaType('image', 'jpeg');
+        } else {
+          ext = 'png';
+          mediaType = MediaType('image', 'png');
+        }
+      }
 
       request.files.add(
         await http.MultipartFile.fromPath(
@@ -40,17 +57,25 @@ class ProfileRepository {
         ),
       );
 
-      final response = await request.send();
+      final response = await request.send().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Upload timed out'),
+      );
       if (response.statusCode == 200) {
         await response.stream.drain();
-        final url = '$_fileServerBase/avatars/$uid.$ext';
+        final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+        final url = '$_fileServerBase/avatars/$uid.$ext?v=$cacheBuster';
         await _firestore.collection('users').doc(uid).update({
           'avatarUrl': url,
         });
         return url;
+      } else {
+        final body = await response.stream.bytesToString();
+        throw Exception('Upload failed (HTTP ${response.statusCode}): $body');
       }
-    } catch (_) {}
-    return null;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> updateLanguage(String uid, String lang) {

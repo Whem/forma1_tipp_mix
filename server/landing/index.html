@@ -193,6 +193,50 @@ h1 .cyan{color:var(--cyan);}
 .feat-title{font-weight:700;font-size:0.95rem;margin-bottom:4px;}
 .feat-desc{font-size:0.8rem;color:var(--gray);line-height:1.4;}
 
+.support-section{
+  width:100%;max-width:650px;
+  background:var(--card);
+  border:1px solid rgba(92,225,230,0.12);
+  border-radius:16px;padding:24px;
+}
+.support-title{
+  font-size:1rem;font-weight:700;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.support-title span{color:var(--red);}
+.donation-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;
+  background:rgba(255,255,255,0.03);
+  border-radius:10px;
+  margin-bottom:8px;
+  transition:background 0.2s;
+}
+.donation-row:hover{background:rgba(255,255,255,0.06);}
+.donation-icon{font-size:1.3rem;}
+.donation-label{font-weight:700;font-size:0.9rem;min-width:70px;}
+.donation-value{color:var(--cyan);font-size:0.85rem;font-family:monospace;}
+.donation-copy{
+  margin-left:auto;
+  background:rgba(92,225,230,0.1);
+  border:1px solid rgba(92,225,230,0.2);
+  color:var(--cyan);border-radius:8px;
+  padding:6px 12px;font-size:0.75rem;font-weight:600;
+  cursor:pointer;transition:all 0.2s;
+}
+.donation-copy:hover{background:rgba(92,225,230,0.2);}
+.github-link{
+  display:inline-flex;align-items:center;gap:8px;
+  color:var(--white);text-decoration:none;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;padding:10px 20px;
+  font-weight:600;font-size:0.9rem;
+  transition:all 0.2s;margin-top:8px;
+}
+.github-link:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);}
+.github-link svg{width:20px;height:20px;fill:var(--white);}
+
 .footer{
   font-size:0.75rem;color:var(--gray);text-align:center;
   padding-top:24px;border-top:1px solid rgba(255,255,255,0.05);
@@ -266,6 +310,29 @@ h1 .cyan{color:var(--cyan);}
 
   <div class="features" id="features-grid"></div>
 
+  <div class="support-section" id="support-section">
+    <div class="support-title">❤️ <span id="txt-support-title"></span></div>
+    <p style="font-size:0.85rem;color:var(--gray);margin-bottom:16px" id="txt-support-desc"></p>
+    <div class="donation-row">
+      <span class="donation-icon">💳</span>
+      <span class="donation-label">Revolut</span>
+      <span class="donation-value">@szabolt19q</span>
+      <button class="donation-copy" onclick="copyText('@szabolt19q','Revolut')" id="btn-copy-rev">Copy</button>
+    </div>
+    <div class="donation-row">
+      <span class="donation-icon">₿</span>
+      <span class="donation-label">Bitcoin</span>
+      <span class="donation-value">bc1qeycd...purh8c</span>
+      <button class="donation-copy" onclick="copyText('bc1qeycda4kdd8kupgh9mrxxgardkrkjh82wpurh8c','BTC')" id="btn-copy-btc">Copy</button>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <a href="https://github.com/Whem/forma1_tipp_mix" target="_blank" rel="noopener" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span id="txt-github">GitHub</span>
+      </a>
+    </div>
+  </div>
+
   <div class="footer" id="txt-footer"></div>
 
 </div>
@@ -281,8 +348,12 @@ const i18n = {
     raceName: 'Ausztrál Nagydíj — Melbourne',
     raceDate: '2026. március 8., vasárnap',
     download: 'APK Letöltés',
-    dlInfo: 'Android 6.0+ \u2022 v2.3.0 \u2022 ~68 MB',
-    whatsNewTitle: 'Újdonságok a v2.3.0-ban',
+    supportTitle: 'Támogatás',
+    supportDesc: 'Ha tetszik az alkalmazás, támogasd a fejlesztést!',
+    github: 'Forráskód a GitHubon',
+    copied: 'Másolva!',
+    dlInfo: 'Android 6.0+ \u2022 v2.5.0 \u2022 ~68 MB',
+    whatsNewTitle: 'Újdonságok a v2.5.0-ban',
     whatsNew: [
       {icon: '👥', text: 'Barát-csoportok — hozz létre csoportokat és hívd meg a barátaidat FriendCode-dal!'},
       {icon: '🤖', text: 'AI kategória — regisztrációnál jelölheted, ha AI segítséget használsz, külön ranglistán versenyzel'},
@@ -292,6 +363,12 @@ const i18n = {
       {icon: '❤️', text: 'Támogatás szekció — Revolut és Bitcoin donation opciók a profilban'},
       {icon: '🤖', text: 'FormaAI — AI ellenfél minden futamra és szezon tippre'},
       {icon: '🃏', text: 'Joker rendszer — dupla pont kedvenc futamodra'},
+      {icon: '🖼️', text: 'Avatar feltöltés javítás — cache frissítés és hibakezelés'},
+      {icon: '🏅', text: 'Achievement rendszer fix — helyes ID-k szerver és kliens között'},
+      {icon: '📊', text: 'Ranglista javítás — minden felhasználó megjelenik'},
+      {icon: '✨', text: 'Szezon tipp animáció — villogás ha még nem tippeltél'},
+      {icon: '🔔', text: 'FCM értesítések — futam emlékeztető és eredmény push'},
+      {icon: '🔒', text: 'SSL beállítva az af1.liggin.xyz-re'},
     ],
     features: [
       {icon: '👥', title: 'Barát-csoportok', desc: 'Hozz létre csoportokat, hívd meg barátaidat'},
@@ -315,8 +392,12 @@ const i18n = {
     raceName: 'Australian Grand Prix — Melbourne',
     raceDate: 'Sunday, March 8, 2026',
     download: 'Download APK',
-    dlInfo: 'Android 6.0+ \u2022 v2.3.0 \u2022 ~68 MB',
-    whatsNewTitle: "What's new in v2.3.0",
+    supportTitle: 'Support',
+    supportDesc: 'If you enjoy the app, consider supporting the development!',
+    github: 'Source code on GitHub',
+    copied: 'Copied!',
+    dlInfo: 'Android 6.0+ \u2022 v2.5.0 \u2022 ~68 MB',
+    whatsNewTitle: "What's new in v2.5.0",
     whatsNew: [
       {icon: '👥', text: 'Friend groups — create groups and invite friends with FriendCode!'},
       {icon: '🤖', text: 'AI category — mark AI assistance at registration, compete in a separate leaderboard'},
@@ -326,6 +407,12 @@ const i18n = {
       {icon: '❤️', text: 'Support section — Revolut and Bitcoin donation options in profile'},
       {icon: '🤖', text: 'FormaAI — AI opponent for every race and season prediction'},
       {icon: '🃏', text: 'Joker system — double points on your favorite race'},
+      {icon: '🖼️', text: 'Avatar upload fix — cache refresh and error handling'},
+      {icon: '🏅', text: 'Achievement system fix — correct IDs between server and client'},
+      {icon: '📊', text: 'Standings fix — all users now appear correctly'},
+      {icon: '✨', text: 'Season tip animation — pulsing when no prediction made'},
+      {icon: '🔔', text: 'FCM notifications — race reminder and results push'},
+      {icon: '🔒', text: 'SSL configured for af1.liggin.xyz'},
     ],
     features: [
       {icon: '👥', title: 'Friend Groups', desc: 'Create groups, invite friends via FriendCode'},
@@ -375,6 +462,11 @@ function render() {
   document.getElementById('txt-dl-info').textContent = t.dlInfo;
   document.getElementById('txt-whats-new-title').textContent = t.whatsNewTitle;
   document.getElementById('txt-footer').innerHTML = t.footer;
+  document.getElementById('txt-support-title').textContent = t.supportTitle;
+  document.getElementById('txt-support-desc').textContent = t.supportDesc;
+  document.getElementById('txt-github').textContent = t.github;
+  document.getElementById('btn-copy-rev').textContent = t.copied ? 'Copy' : 'Copy';
+  document.getElementById('btn-copy-btc').textContent = t.copied ? 'Copy' : 'Copy';
 
   const wnList = document.getElementById('whats-new-list');
   wnList.innerHTML = t.whatsNew.map(item =>
@@ -424,6 +516,18 @@ function updateCountdown() {
 
 updateCountdown();
 setInterval(updateCountdown, 1000);
+
+function copyText(text, label) {
+  navigator.clipboard.writeText(text).then(() => {
+    const t = i18n[currentLang];
+    const msg = t.copied || 'Copied!';
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--cyan);color:var(--cyan);padding:10px 24px;border-radius:10px;font-size:0.9rem;font-weight:600;z-index:100;';
+    el.textContent = label + ' ' + msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  });
+}
 </script>
 
 </body>

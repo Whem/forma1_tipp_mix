@@ -210,7 +210,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
       child: GestureDetector(
         onTap: () {
           HapticFeedback.mediumImpact();
-          context.go('/race/${race.id}/predict');
+          context.push('/race/${race.id}/predict');
         },
         child: Container(
           decoration: BoxDecoration(
@@ -397,7 +397,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                             borderRadius: BorderRadius.circular(14),
                             onTap: () {
                               HapticFeedback.heavyImpact();
-                              context.go('/race/${race.id}/predict');
+                              context.push('/race/${race.id}/predict');
                             },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -508,6 +508,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
               label: isHu ? 'Szezon tipp' : 'Season tip',
               color: hasSeasonPred ? Colors.green : AppColors.f1Gold,
               onTap: () => context.push('/season-prediction'),
+              pulse: !hasSeasonPred,
             ),
           ),
           const SizedBox(width: 10),
@@ -527,7 +528,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
               icon: Icons.military_tech_rounded,
               label: isHu ? 'Eredmények' : 'Achievements',
               color: const Color(0xFFAB47BC),
-              onTap: () => context.go('/achievements'),
+              onTap: () => context.push('/achievements'),
             ),
           ),
         ],
@@ -544,8 +545,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
     required String label,
     required Color color,
     required VoidCallback onTap,
+    bool pulse = false,
   }) {
-    return GestureDetector(
+    Widget card = GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
         onTap();
@@ -556,7 +558,8 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
           color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: color.withValues(alpha: 0.15),
+            color: color.withValues(alpha: pulse ? 0.5 : 0.15),
+            width: pulse ? 1.5 : 1.0,
           ),
         ),
         child: Column(
@@ -576,6 +579,13 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
         ),
       ),
     );
+    if (pulse) {
+      card = card
+          .animate(onPlay: (c) => c.repeat(reverse: true))
+          .shimmer(duration: 1500.ms, color: color.withValues(alpha: 0.15))
+          .scale(begin: const Offset(1.0, 1.0), end: const Offset(1.04, 1.04), duration: 1200.ms);
+    }
+    return card;
   }
 
   Widget _buildStatsRow(ThemeData theme, dynamic user, bool isHu) {

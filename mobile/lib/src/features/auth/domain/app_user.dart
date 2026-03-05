@@ -73,6 +73,12 @@ class AppUser {
       'isAIAssisted': isAIAssisted,
       'groupIds': groupIds,
       'createdAt': Timestamp.fromDate(createdAt),
+      'totalPoints': 0,
+      'racePoints': 0,
+      'seasonPoints': 0,
+      'racesParticipated': 0,
+      'correctP1Count': 0,
+      'streakBest': 0,
     };
   }
 

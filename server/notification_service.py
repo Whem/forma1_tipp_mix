@@ -78,9 +78,14 @@ class NotificationService:
         for user_doc in users:
             user = user_doc.to_dict()
             uid = user_doc.id
-            prediction_ref = self.db.collection("predictions").document(f"{uid}_{race_id}")
-            prediction = prediction_ref.get()
-            if prediction.exists:
+            prediction_docs = list(
+                self.db.collection("race_predictions")
+                .where("raceId", "==", race_id)
+                .where("uid", "==", uid)
+                .limit(1)
+                .stream()
+            )
+            if prediction_docs:
                 continue
 
             token = user.get("fcmToken")

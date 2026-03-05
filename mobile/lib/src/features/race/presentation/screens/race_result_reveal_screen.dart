@@ -78,7 +78,7 @@ class _RaceResultRevealScreenState
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Race Results'),
+        title: Text(_isHu(context) ? 'Futam eredmények' : 'Race Results'),
         backgroundColor: Colors.transparent,
       ),
       body: AppGradientBackground(
@@ -117,6 +117,9 @@ class _RaceResultRevealScreenState
     );
   }
 
+  bool _isHu(BuildContext context) =>
+      Localizations.localeOf(context).languageCode == 'hu';
+
   Widget _buildContent(
     BuildContext context,
     AsyncValue<Race?> raceAsync,
@@ -136,11 +139,11 @@ class _RaceResultRevealScreenState
     }
 
     if (race == null || result == null) {
-      return const Center(child: Text('Results not available yet'));
+      return Center(child: Text(_isHu(context) ? 'Az eredmények még nem érhetők el' : 'Results not available yet'));
     }
 
     if (prediction == null) {
-      return const Center(child: Text('No prediction found'));
+      return Center(child: Text(_isHu(context) ? 'Nem található tipp' : 'No prediction found'));
     }
 
     if (!_revealStarted) {
@@ -175,7 +178,7 @@ class _RaceResultRevealScreenState
           ).animate().fadeIn(duration: 400.ms),
           const SizedBox(height: 6),
           Text(
-            'Result Reveal',
+            _isHu(context) ? 'Eredmény feltárás' : 'Result Reveal',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   color: AppColors.f1Turquoise,
                   fontWeight: FontWeight.w600,
@@ -185,7 +188,7 @@ class _RaceResultRevealScreenState
           _RevealCard(
             step: 0,
             currentStep: _revealStep,
-            label: 'Fastest Lap',
+            label: _isHu(context) ? 'Leggyorsabb kör' : 'Fastest Lap',
             icon: Icons.timer,
             color: AppColors.f1Red,
             predictedDriverId: prediction.fastestLap,
@@ -198,7 +201,7 @@ class _RaceResultRevealScreenState
           _RevealCard(
             step: 1,
             currentStep: _revealStep,
-            label: 'Pole Position',
+            label: _isHu(context) ? 'Pole pozíció' : 'Pole Position',
             icon: Icons.speed,
             color: AppColors.f1Turquoise,
             predictedDriverId: prediction.pole,
@@ -260,7 +263,7 @@ class _RaceResultRevealScreenState
               child: OutlinedButton.icon(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.arrow_back),
-                label: const Text('Back'),
+                label: Text(_isHu(context) ? 'Vissza' : 'Back'),
               ),
             ).animate().fadeIn(delay: 400.ms),
         ],
@@ -346,7 +349,7 @@ class _RevealCard extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              'Your pick: ${_driverName(predictedDriverId)}',
+              '${Localizations.localeOf(context).languageCode == 'hu' ? 'Tippem' : 'Your pick'}: ${_driverName(predictedDriverId)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.white.withValues(alpha: 0.4),
                   ),
@@ -400,7 +403,7 @@ class _RevealCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _DriverSlotLabel(
-                  title: 'Your pick',
+                  title: Localizations.localeOf(context).languageCode == 'hu' ? 'Tippem' : 'Your pick',
                   driverName: _driverName(predictedDriverId),
                   teamColor: _teamColor(predictedDriverId),
                 ),
@@ -420,7 +423,7 @@ class _RevealCard extends StatelessWidget {
               ),
               Expanded(
                 child: _DriverSlotLabel(
-                  title: 'Actual',
+                  title: Localizations.localeOf(context).languageCode == 'hu' ? 'Eredmény' : 'Actual',
                   driverName: _driverName(actualDriverId),
                   teamColor: _teamColor(actualDriverId),
                   alignEnd: true,
@@ -511,7 +514,7 @@ class _TotalPointsCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Total Points',
+            Localizations.localeOf(context).languageCode == 'hu' ? 'Össz pontszám' : 'Total Points',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   color: Colors.grey,
                   fontWeight: FontWeight.w600,
@@ -569,7 +572,7 @@ class _TotalPointsCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'points',
+            Localizations.localeOf(context).languageCode == 'hu' ? 'pont' : 'points',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.grey,
                 ),

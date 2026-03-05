@@ -44,6 +44,7 @@ class FileHandler(SimpleHTTPRequestHandler):
             params = parse_qs(parsed.query)
             uid = params.get("uid", [None])[0]
             if not uid:
+                logger.warning("Avatar upload: missing uid parameter")
                 self.send_error(400, "Missing uid parameter")
                 return
 
@@ -51,16 +52,24 @@ class FileHandler(SimpleHTTPRequestHandler):
 
             if "multipart/form-data" in content_type:
                 body = self.rfile.read(content_length)
-                boundary = content_type.split("boundary=")[1].encode()
+                boundary_str = content_type.split("boundary=")[1].split(";")[0].strip().strip('"')
+                boundary = boundary_str.encode()
+                end_marker = b"\r\n--" + boundary
                 parts = body.split(b"--" + boundary)
                 file_data = None
                 for part in parts:
-                    if b"Content-Type: image/" in part:
+                    if b"Content-Type: image/" in part or b"content-type: image/" in part:
                         header_end = part.find(b"\r\n\r\n")
                         if header_end != -1:
-                            file_data = part[header_end + 4:].rstrip(b"\r\n--")
+                            raw = part[header_end + 4:]
+                            end_idx = raw.rfind(b"\r\n--")
+                            if end_idx != -1:
+                                file_data = raw[:end_idx]
+                            else:
+                                file_data = raw.rstrip(b"\r\n-")
                             break
                 if not file_data:
+                    logger.warning("Avatar upload: no image part found in multipart body (%d bytes, boundary=%s)", len(body), boundary_str)
                     self.send_error(400, "No image file found")
                     return
             else:
@@ -108,6 +117,10 @@ class FileHandler(SimpleHTTPRequestHandler):
             return
 
         if self.path.startswith("/landing"):
+            self._serve_landing()
+            return
+
+        if self.path == "/" or self.path == "":
             self._serve_landing()
             return
 
@@ -175,7 +188,7 @@ class FileHandler(SimpleHTTPRequestHandler):
         self.wfile.write(data)
 
     def log_message(self, format, *args):
-        logger.debug(format % args)
+        logger.info(format % args)
 
 
 def start_file_server(port=PORT):

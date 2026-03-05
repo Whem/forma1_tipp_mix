@@ -117,8 +117,9 @@ class GamificationRepository {
     final currentIds =
         List<String>.from(data['achievementIds'] as List? ?? []);
     final totalPoints = data['totalPoints'] as int? ?? 0;
-    final streak = data['streak'] as int? ?? 0;
+    final streak = data['currentStreak'] as int? ?? data['streak'] as int? ?? 0;
     final racesParticipated = data['racesParticipated'] as int? ?? 0;
+    final correctP1Count = data['correctP1Count'] as int? ?? 0;
 
     final allDefs = await _firestore.collection('achievements').get();
     final newIds = <String>[];
@@ -133,8 +134,10 @@ class GamificationRepository {
           currentValue = totalPoints;
         case 'streak':
           currentValue = streak;
-        case 'races':
+        case 'races' || 'participation':
           currentValue = racesParticipated;
+        case 'correct_p1':
+          currentValue = correctP1Count;
         default:
           continue;
       }

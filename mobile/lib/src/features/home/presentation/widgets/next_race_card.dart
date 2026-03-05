@@ -73,7 +73,7 @@ class _NextRaceCardState extends ConsumerState<NextRaceCard> {
     final dateStr = DateFormat('yyyy. MMM d. – HH:mm').format(race.raceDate);
 
     return GlassCard(
-      onTap: () => context.go('/race/${race.id}/predict'),
+      onTap: () => context.push('/race/${race.id}/predict'),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
@@ -132,7 +132,7 @@ class _NextRaceCardState extends ConsumerState<NextRaceCard> {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: () => context.go('/race/${race.id}/predict'),
+                onPressed: () => context.push('/race/${race.id}/predict'),
                 icon: const Icon(Icons.edit_note_rounded),
                 label: Text(isHu ? 'Tippelj!' : 'Predict!'),
                 style: FilledButton.styleFrom(

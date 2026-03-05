@@ -120,6 +120,8 @@ class AuthController extends AsyncNotifier<AuthState> {
     required String displayName,
     required String language,
     bool isAIAssisted = false,
+    String? aiModelName,
+    String? aiPrompt,
   }) async {
     _log('register() called with $email');
     state = const AsyncLoading();
@@ -131,6 +133,8 @@ class AuthController extends AsyncNotifier<AuthState> {
         displayName: displayName,
         language: language,
         isAIAssisted: isAIAssisted,
+        aiModelName: aiModelName,
+        aiPrompt: aiPrompt,
       );
       final profile = await repo.getUserProfile(credential.user!.uid);
       _initPush(credential.user!.uid);

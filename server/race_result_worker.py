@@ -177,7 +177,7 @@ class RaceResultWorker:
 
     def _calculate_all_user_points(self, race_id: str, result: dict):
         predictions = (
-            self.db.collection("predictions")
+            self.db.collection("race_predictions")
             .where("raceId", "==", race_id)
             .stream()
         )
@@ -187,14 +187,14 @@ class RaceResultWorker:
 
         for pred_doc in predictions:
             pred = pred_doc.to_dict()
-            uid = pred.get("userId")
+            uid = pred.get("uid")
             if not uid:
                 continue
 
             points = self._score_prediction(pred, result)
             total = sum(points.values())
 
-            if pred.get("joker"):
+            if pred.get("isJoker"):
                 total *= 2
 
             batch.update(pred_doc.reference, {
@@ -206,6 +206,8 @@ class RaceResultWorker:
             user_ref = self.db.collection("users").document(uid)
             batch.update(user_ref, {
                 "totalPoints": firestore.Increment(total),
+                "racePoints": firestore.Increment(total),
+                "racesParticipated": firestore.Increment(1),
                 f"racePointsMap.{race_id}": total,
             })
 
@@ -256,11 +258,11 @@ class RaceResultWorker:
 
     def _update_streaks(self, race_id: str):
         predictions = (
-            self.db.collection("predictions")
+            self.db.collection("race_predictions")
             .where("raceId", "==", race_id)
             .stream()
         )
-        predicted_users = {pred.to_dict().get("userId") for pred in predictions}
+        predicted_users = {pred.to_dict().get("uid") for pred in predictions}
 
         users = self.db.collection("users").stream()
         batch = self.db.batch()
@@ -295,7 +297,7 @@ class RaceResultWorker:
 
     def _check_achievements(self, race_id: str, result: dict):
         predictions = (
-            self.db.collection("predictions")
+            self.db.collection("race_predictions")
             .where("raceId", "==", race_id)
             .where("scored", "==", True)
             .stream()
@@ -306,13 +308,13 @@ class RaceResultWorker:
 
         for pred_doc in predictions:
             pred = pred_doc.to_dict()
-            uid = pred.get("userId")
+            uid = pred.get("uid")
             if not uid:
                 continue
 
             user_ref = self.db.collection("users").document(uid)
             user_data = user_ref.get().to_dict() or {}
-            achievements = set(user_data.get("achievements", []))
+            achievements = set(user_data.get("achievementIds", []) + user_data.get("achievements", []))
             new_achievements = []
 
             if pred.get("p1") == result["p1"] and pred.get("p2") == result["p2"] and pred.get("p3") == result["p3"]:
@@ -320,24 +322,37 @@ class RaceResultWorker:
                     new_achievements.append("perfect_podium")
 
             total_points = user_data.get("totalPoints", 0)
-            if total_points >= 100 and "century" not in achievements:
-                new_achievements.append("century")
-            if total_points >= 500 and "high_roller" not in achievements:
-                new_achievements.append("high_roller")
+            if total_points >= 100 and "points_100" not in achievements:
+                new_achievements.append("points_100")
+            if total_points >= 500 and "points_500" not in achievements:
+                new_achievements.append("points_500")
 
             current_streak = user_data.get("currentStreak", 0)
+            if current_streak >= 3 and "streak_3" not in achievements:
+                new_achievements.append("streak_3")
             if current_streak >= 5 and "streak_5" not in achievements:
                 new_achievements.append("streak_5")
             if current_streak >= 10 and "streak_10" not in achievements:
                 new_achievements.append("streak_10")
 
             p1_count = user_data.get("correctP1Count", 0)
-            if p1_count >= 3 and "oracle" not in achievements:
-                new_achievements.append("oracle")
+            if p1_count >= 1 and "correct_p1_1" not in achievements:
+                new_achievements.append("correct_p1_1")
+            if p1_count >= 3 and "correct_p1_3" not in achievements:
+                new_achievements.append("correct_p1_3")
+            if p1_count >= 5 and "correct_p1_5" not in achievements:
+                new_achievements.append("correct_p1_5")
+
+            races_participated = user_data.get("racesParticipated", 0)
+            if races_participated >= 1 and "first_prediction" not in achievements:
+                new_achievements.append("first_prediction")
+            if races_participated >= 24 and "all_races" not in achievements:
+                new_achievements.append("all_races")
 
             if new_achievements:
                 batch.update(user_ref, {
-                    "achievements": firestore.ArrayUnion(new_achievements)
+                    "achievements": firestore.ArrayUnion(new_achievements),
+                    "achievementIds": firestore.ArrayUnion(new_achievements),
                 })
                 logger.info("Achievements %s awarded to user %s", new_achievements, uid)
 

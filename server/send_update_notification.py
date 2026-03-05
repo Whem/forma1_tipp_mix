@@ -34,6 +34,7 @@ def send_update_notification(version: str, build: int):
                 'type': 'app_update',
                 'version': version,
                 'build': str(build),
+                'url': 'https://f1.liggin.xyz',
             },
             'android': {
                 'priority': 'high',

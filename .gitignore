@@ -426,3 +426,21 @@ FakesAssemblies/
 
 # Visual Studio 6 workspace options file
 *.opt
+
+# Sensitive server scripts (contain credentials)
+server/deploy_all.py
+server/deploy.sh
+server/deploy_firestore_rules.py
+server/backfill_standings_fields.py
+server/run_backfill_remote.py
+server/send_push_remote.py
+server/upload_release.py
+server/_check_logs.py
+server/test_firestore_check.py
+
+# Firebase service account
+*.json.bak
+forma1mix-*.json
+
+# Flutter build output
+mobile/build/

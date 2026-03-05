@@ -9,6 +9,7 @@ import 'package:forma1_tipp/src/core/widgets/app_gradient_background.dart';
 import 'package:forma1_tipp/src/core/widgets/glass_card.dart';
 import 'package:forma1_tipp/src/features/auth/presentation/auth_controller.dart';
 import 'package:forma1_tipp/src/features/gamification/data/gamification_repository.dart';
+import 'package:forma1_tipp/src/core/utils/icon_utils.dart';
 import 'package:forma1_tipp/src/features/gamification/domain/achievement.dart';
 
 class AchievementsScreen extends ConsumerStatefulWidget {
@@ -61,9 +62,10 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  achievement.icon,
-                  style: const TextStyle(fontSize: 48),
+                Icon(
+                  materialIconFromName(achievement.icon),
+                  size: 48,
+                  color: AppColors.f1Gold,
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -82,7 +84,9 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
                 const SizedBox(height: 24),
                 FilledButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Close'),
+                  child: Text(
+                    Localizations.localeOf(context).languageCode == 'hu' ? 'OK' : 'OK',
+                  ),
                 ),
               ],
             ),
@@ -116,7 +120,9 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
         uid != null ? ref.watch(userAchievementsProvider(uid)) : null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Achievements')),
+      appBar: AppBar(title: Text(
+        Localizations.localeOf(context).languageCode == 'hu' ? 'Eredmények' : 'Achievements',
+      )),
       body: AppGradientBackground(
         child: Stack(
           children: [
@@ -229,9 +235,10 @@ class _AchievementCard extends StatelessWidget {
                         0.2126, 0.7152, 0.0722, 0, 0,
                         0, 0, 0, 0.5, 0,
                       ]),
-                child: Text(
-                  achievement.icon,
-                  style: const TextStyle(fontSize: 40),
+                child: Icon(
+                  materialIconFromName(achievement.icon),
+                  size: 40,
+                  color: earned ? AppColors.f1Gold : Colors.grey,
                 ),
               ),
               if (earned)

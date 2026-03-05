@@ -1,7 +1,7 @@
 name: forma1_tipp
 description: "Formula 1 Tipping Game - Predict champions, race winners, and compete with friends."
 publish_to: 'none'
-version: 2.3.0+9
+version: 2.5.0+11
 
 environment:
   sdk: ^3.11.0
@@ -40,6 +40,7 @@ dependencies:
 
   # Image handling
   cached_network_image: ^3.4.1
+  flutter_cache_manager: ^3.4.1
   image_picker: ^1.1.2
   image_cropper: ^8.0.2
 

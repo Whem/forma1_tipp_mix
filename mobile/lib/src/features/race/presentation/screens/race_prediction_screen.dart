@@ -5,6 +5,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:forma1_tipp/src/core/theme/app_colors.dart';
 import 'package:forma1_tipp/src/core/widgets/app_gradient_background.dart';
@@ -16,6 +17,7 @@ import 'package:forma1_tipp/src/features/race/domain/driver.dart';
 import 'package:forma1_tipp/src/features/race/domain/race.dart';
 import 'package:forma1_tipp/src/features/race/domain/race_prediction.dart';
 import 'package:forma1_tipp/src/features/race/domain/team.dart';
+import 'package:forma1_tipp/src/features/gamification/data/gamification_repository.dart';
 import 'package:forma1_tipp/src/features/race/presentation/widgets/driver_picker_sheet.dart';
 
 class RacePredictionScreen extends ConsumerStatefulWidget {
@@ -135,12 +137,22 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
         });
       }
 
+      await ref.read(gamificationRepositoryProvider).checkAndAwardAchievements(uid);
+
       _confettiController.play();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Prediction saved!')),
         );
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (mounted) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -170,7 +182,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Race Prediction'),
+        title: Text(Localizations.localeOf(context).languageCode == 'hu' ? 'Futam tipp' : 'Race Prediction'),
         backgroundColor: Colors.transparent,
       ),
       body: AppGradientBackground(
