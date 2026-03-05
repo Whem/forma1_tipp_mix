@@ -1,6 +1,6 @@
 {
-  "version": "2.5.0",
-  "build": 11,
-  "releaseNotes": "Avatar feltöltés javítás, achievement rendszer fix, ranglista fix, szezon tipp animáció, FCM értesítések, SSL af1.liggin.xyz",
+  "version": "2.5.1",
+  "build": 12,
+  "releaseNotes": "Futam tipp oldal magyar fordítás, Facebook link redirect fix, landing page javítás",
   "apkUrl": "https://f1.liggin.xyz/releases/f1tippmix.apk"
 }

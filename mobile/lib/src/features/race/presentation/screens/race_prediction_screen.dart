@@ -70,8 +70,10 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
     }
   }
 
+  bool get _isHu => Localizations.localeOf(context).languageCode == 'hu';
+
   String _formatDuration(Duration d) {
-    if (d <= Duration.zero) return 'Locked';
+    if (d <= Duration.zero) return _isHu ? 'Zárolva' : 'Locked';
     final days = d.inDays;
     final hours = d.inHours % 24;
     final mins = d.inMinutes % 60;
@@ -143,7 +145,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Prediction saved!')),
+          SnackBar(content: Text(_isHu ? 'Tipp elmentve!' : 'Prediction saved!')),
         );
         await Future.delayed(const Duration(milliseconds: 800));
         if (mounted) {
@@ -298,7 +300,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                           color: AppColors.f1Gold, size: 22),
                       const SizedBox(width: 8),
                       Text(
-                        'Podium',
+                        _isHu ? 'Dobogó' : 'Podium',
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
@@ -317,7 +319,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                         : () => _pickDriver(
                               drivers: drivers,
                               teams: teams,
-                              title: 'Select P1',
+                              title: _isHu ? 'Válaszd ki P1-et' : 'Select P1',
                               excludeIds: {
                                 if (_p2 != null) _p2!,
                                 if (_p3 != null) _p3!,
@@ -336,7 +338,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                         : () => _pickDriver(
                               drivers: drivers,
                               teams: teams,
-                              title: 'Select P2',
+                              title: _isHu ? 'Válaszd ki P2-t' : 'Select P2',
                               excludeIds: {
                                 if (_p1 != null) _p1!,
                                 if (_p3 != null) _p3!,
@@ -355,7 +357,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                         : () => _pickDriver(
                               drivers: drivers,
                               teams: teams,
-                              title: 'Select P3',
+                              title: _isHu ? 'Válaszd ki P3-at' : 'Select P3',
                               excludeIds: {
                                 if (_p1 != null) _p1!,
                                 if (_p2 != null) _p2!,
@@ -377,7 +379,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                           color: AppColors.f1Turquoise, size: 22),
                       const SizedBox(width: 8),
                       Text(
-                        'Pole Position',
+                        _isHu ? 'Pole pozíció' : 'Pole Position',
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
@@ -398,7 +400,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                         : () => _pickDriver(
                               drivers: drivers,
                               teams: teams,
-                              title: 'Select Pole Position',
+                              title: _isHu ? 'Válaszd ki a Pole-t' : 'Select Pole Position',
                               onSelected: (id) => setState(() => _pole = id),
                             ),
                   ),
@@ -416,7 +418,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                           color: AppColors.f1Red, size: 22),
                       const SizedBox(width: 8),
                       Text(
-                        'Fastest Lap',
+                        _isHu ? 'Leggyorsabb kör' : 'Fastest Lap',
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
@@ -438,7 +440,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                         : () => _pickDriver(
                               drivers: drivers,
                               teams: teams,
-                              title: 'Select Fastest Lap',
+                              title: _isHu ? 'Válaszd ki a leggyorsabb kört' : 'Select Fastest Lap',
                               onSelected: (id) =>
                                   setState(() => _fastestLap = id),
                             ),
@@ -459,14 +461,14 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Joker (2x points)',
+                            _isHu ? 'Joker (2x pont)' : 'Joker (2x points)',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleSmall
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           Text(
-                            '$jokersRemaining remaining',
+                            _isHu ? '$jokersRemaining maradt' : '$jokersRemaining remaining',
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall
@@ -502,7 +504,7 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Submit Prediction'),
+                      : Text(_isHu ? 'Tipp beküldése' : 'Submit Prediction'),
                 ),
               ).animate().fadeIn(delay: 600.ms, duration: 400.ms).slideY(begin: 0.1),
           ],
@@ -534,13 +536,13 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
           children: [
             _RaceHeader(race: race),
             const SizedBox(height: 8),
-            const _CountdownBadge(label: 'Locked', isLocked: true),
+            _CountdownBadge(label: Localizations.localeOf(context).languageCode == 'hu' ? 'Zárolva' : 'Locked', isLocked: true),
             const SizedBox(height: 12),
             GlassCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Your Prediction',
+                  Text(Localizations.localeOf(context).languageCode == 'hu' ? 'Tipped' : 'Your Prediction',
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium
@@ -554,14 +556,14 @@ class _RacePredictionScreenState extends ConsumerState<RacePredictionScreen> {
                         color: AppColors.jokerGold.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.auto_awesome,
+                          const Icon(Icons.auto_awesome,
                               color: AppColors.jokerGold, size: 16),
-                          SizedBox(width: 4),
-                          Text('Joker Active (2x)',
-                              style: TextStyle(
+                          const SizedBox(width: 4),
+                          Text(Localizations.localeOf(context).languageCode == 'hu' ? 'Joker aktív (2x)' : 'Joker Active (2x)',
+                              style: const TextStyle(
                                   color: AppColors.jokerGold,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 12)),
@@ -748,7 +750,7 @@ class _PodiumSlot extends StatelessWidget {
                       ],
                     )
                   : Text(
-                      'Tap to select',
+                      Localizations.localeOf(context).languageCode == 'hu' ? 'Koppints a választáshoz' : 'Tap to select',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Colors.grey.withValues(alpha: 0.6),
                           ),

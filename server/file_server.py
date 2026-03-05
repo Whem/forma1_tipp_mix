@@ -104,23 +104,26 @@ class FileHandler(SimpleHTTPRequestHandler):
             self.send_error(500, str(e))
 
     def do_GET(self):
-        if self.path == "/health":
+        parsed = urlparse(self.path)
+        clean_path = parsed.path
+
+        if clean_path == "/health":
             self._json_response({"status": "ok"})
             return
 
-        if self.path == "/api/version":
+        if clean_path == "/api/version":
             self._handle_version()
             return
 
-        if self.path.startswith("/releases/"):
+        if clean_path.startswith("/releases/"):
             self._serve_release_file()
             return
 
-        if self.path.startswith("/landing"):
+        if clean_path.startswith("/landing"):
             self._serve_landing()
             return
 
-        if self.path == "/" or self.path == "":
+        if clean_path == "/" or clean_path == "":
             self._serve_landing()
             return
 
