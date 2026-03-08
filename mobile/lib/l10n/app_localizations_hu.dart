@@ -61,4 +61,25 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get errorGeneric => 'Hiba történt. Próbáld újra.';
+
+  @override
+  String get liveRace => 'Élő futam';
+
+  @override
+  String get liveDriversTab => 'Versenyzők';
+
+  @override
+  String get livePredictorsTab => 'Tippelők';
+
+  @override
+  String get waitingForLiveData => 'Várakozás az élő adatokra...';
+
+  @override
+  String get liveDataAppears => 'A futam adatai automatikusan megjelennek.';
+
+  @override
+  String get predictorsLoading => 'Tippelők adatai betöltés alatt...';
+
+  @override
+  String get predictorsQuotaNote => 'A pontszámok hamarosan megjelennek.';
 }

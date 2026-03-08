@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:forma1_tipp/src/core/services/live_sse_service.dart';
 import 'package:forma1_tipp/src/core/theme/app_colors.dart';
-import 'package:forma1_tipp/l10n/gen/app_localizations.dart';
+import 'package:forma1_tipp/l10n/app_localizations.dart';
 import 'package:forma1_tipp/src/core/widgets/app_gradient_background.dart';
 import 'package:forma1_tipp/src/core/widgets/glass_card.dart';
 
@@ -111,53 +111,51 @@ class _LiveTabbedView extends StatelessWidget {
             _StatusBanner(label: 'RED FLAG', color: AppColors.errorRed, icon: Icons.flag)
                 .animate().fadeIn().shake(hz: 2, rotation: 0.01),
           const SizedBox(height: 12),
-          // Tab bar
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-            ),
-            child: TabBar(
+          // Segmented tab control
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: GlassCard(
+              padding: const EdgeInsets.all(4),
+              borderRadius: 14,
+              opacity: 0.06,
+              child: TabBar(
               indicator: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.f1Red.withValues(alpha: 0.5), AppColors.f1Red.withValues(alpha: 0.25)],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(color: AppColors.f1Red.withValues(alpha: 0.15), blurRadius: 8, offset: const Offset(0, 2)),
-                ],
+                color: AppColors.f1Red,
+                borderRadius: BorderRadius.circular(10),
               ),
+              indicatorSize: TabBarIndicatorSize.tab,
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.grey.shade500,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, letterSpacing: 0.3),
+              unselectedLabelColor: Colors.white54,
+              labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
               dividerHeight: 0,
-              splashBorderRadius: BorderRadius.circular(12),
+              splashBorderRadius: BorderRadius.circular(10),
+              labelPadding: EdgeInsets.zero,
               tabs: [
                 Tab(
+                  height: 38,
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.sports_motorsports_outlined, size: 18),
-                      const SizedBox(width: 6),
-                      Text('${l10n?.liveDriversTab ?? "Drivers"} (${state.positions.length})'),
+                      const Icon(Icons.flag_outlined, size: 16),
+                      const SizedBox(width: 5),
+                      Text(l10n?.liveDriversTab ?? 'Drivers'),
                     ],
                   ),
                 ),
                 Tab(
+                  height: 38,
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.emoji_events_outlined, size: 18),
-                      const SizedBox(width: 6),
-                      Text('${l10n?.livePredictorsTab ?? "Predictions"} (${state.userScores.length})'),
+                      const Icon(Icons.emoji_events_outlined, size: 16),
+                      const SizedBox(width: 5),
+                      Text(l10n?.livePredictorsTab ?? 'Predictions'),
                     ],
                   ),
                 ),
               ],
+              ),
             ),
           ),
           const SizedBox(height: 8),

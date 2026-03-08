@@ -60,4 +60,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get liveRace => 'Live Race';
+
+  @override
+  String get liveDriversTab => 'Drivers';
+
+  @override
+  String get livePredictorsTab => 'Predictions';
+
+  @override
+  String get waitingForLiveData => 'Waiting for live data...';
+
+  @override
+  String get liveDataAppears => 'Race data will appear automatically.';
+
+  @override
+  String get predictorsLoading => 'Prediction scores loading...';
+
+  @override
+  String get predictorsQuotaNote => 'Scores will appear when data is available.';
 }

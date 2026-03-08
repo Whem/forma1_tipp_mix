@@ -199,6 +199,14 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong. Please try again.'**
   String get errorGeneric;
+
+  String get liveRace;
+  String get liveDriversTab;
+  String get livePredictorsTab;
+  String get waitingForLiveData;
+  String get liveDataAppears;
+  String get predictorsLoading;
+  String get predictorsQuotaNote;
 }
 
 class _AppLocalizationsDelegate
