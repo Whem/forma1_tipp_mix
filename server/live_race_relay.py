@@ -1,4 +1,6 @@
+import json
 import logging
+import os
 import time
 from datetime import datetime, timedelta
 
@@ -11,6 +13,9 @@ import config
 logger = logging.getLogger(__name__)
 BUDAPEST = tz.gettz(config.TIMEZONE)
 
+OPENF1_TOKEN_URL = "https://api.openf1.org/token"
+OPENF1_CREDS_PATH = os.path.join(config.BASE_DIR, "openf1_credentials.json")
+
 
 class LiveRaceRelay:
     def __init__(self):
@@ -19,6 +24,47 @@ class LiveRaceRelay:
         self._current_race_id: str | None = None
         self._session_key: int | None = None
         self._schedule: list[dict] = []
+        self._openf1_token: str | None = None
+        self._token_expires: datetime | None = None
+        self._openf1_creds = self._load_openf1_creds()
+
+    @staticmethod
+    def _load_openf1_creds() -> dict | None:
+        try:
+            with open(OPENF1_CREDS_PATH) as f:
+                creds = json.load(f)
+                logger.info("OpenF1 credentials loaded")
+                return creds
+        except FileNotFoundError:
+            logger.warning("OpenF1 credentials not found at %s, live data during sessions will be unavailable", OPENF1_CREDS_PATH)
+            return None
+
+    def _get_openf1_headers(self) -> dict:
+        if self._openf1_creds is None:
+            return {}
+        now = datetime.utcnow()
+        if self._openf1_token is None or self._token_expires is None or now >= self._token_expires:
+            self._refresh_openf1_token()
+        if self._openf1_token:
+            return {"Authorization": f"Bearer {self._openf1_token}", "accept": "application/json"}
+        return {}
+
+    def _refresh_openf1_token(self):
+        try:
+            r = requests.post(OPENF1_TOKEN_URL, data={
+                "username": self._openf1_creds["username"],
+                "password": self._openf1_creds["password"],
+            }, headers={"Content-Type": "application/x-www-form-urlencoded"}, timeout=10)
+            if r.ok:
+                data = r.json()
+                self._openf1_token = data["access_token"]
+                expires_in = int(data.get("expires_in", 3600))
+                self._token_expires = datetime.utcnow() + timedelta(seconds=expires_in - 60)
+                logger.info("OpenF1 token refreshed, expires in %ds", expires_in)
+            else:
+                logger.warning("Failed to get OpenF1 token: %s %s", r.status_code, r.text[:100])
+        except Exception:
+            logger.exception("Error refreshing OpenF1 token")
 
     def start(self):
         logger.info("LiveRaceRelay started")
@@ -26,6 +72,10 @@ class LiveRaceRelay:
         while True:
             try:
                 race = self._find_active_race()
+                if race is None:
+                    # Fallback: check OpenF1 directly for active session
+                    race = self._find_active_race_from_openf1()
+
                 if race is None:
                     if self._active:
                         self._finish_relay()
@@ -53,17 +103,20 @@ class LiveRaceRelay:
     def _now(self) -> datetime:
         return datetime.now(BUDAPEST)
 
-    # ── Schedule (1 Firestore read on startup) ──
+    # ── Schedule loading ──
 
     def _load_schedule(self):
-        logger.info("Loading race schedule from Firestore (one-time)")
-        self._schedule = []
-        for doc in self.db.collection("races").order_by("raceDate").stream():
-            data = doc.to_dict()
-            race_dt = self._parse_race_datetime(data)
-            if race_dt is not None:
-                self._schedule.append({"id": doc.id, "data": data, "datetime": race_dt})
-        logger.info("Loaded %d races for live relay", len(self._schedule))
+        try:
+            logger.info("Loading race schedule from Firestore (one-time)")
+            self._schedule = []
+            for doc in self.db.collection("races").order_by("raceDate").stream():
+                data = doc.to_dict()
+                race_dt = self._parse_race_datetime(data)
+                if race_dt is not None:
+                    self._schedule.append({"id": doc.id, "data": data, "datetime": race_dt})
+            logger.info("Loaded %d races for live relay", len(self._schedule))
+        except Exception:
+            logger.exception("Failed to load schedule from Firestore, will use OpenF1 fallback")
 
     def _find_active_race(self) -> dict | None:
         now = self._now()
@@ -75,6 +128,35 @@ class LiveRaceRelay:
                 return race
         return None
 
+    def _find_active_race_from_openf1(self) -> dict | None:
+        """Fallback: detect active race session directly from OpenF1 API."""
+        headers = self._get_openf1_headers()
+        try:
+            r = requests.get(
+                f"{config.OPENF1_API_BASE}/sessions",
+                params={"session_type": "Race", "year": config.SEASON},
+                headers=headers, timeout=10,
+            )
+            if not r.ok:
+                return None
+            now = self._now()
+            for s in r.json():
+                ds = s.get("date_start")
+                if ds is None:
+                    continue
+                race_dt = datetime.fromisoformat(ds).astimezone(BUDAPEST)
+                window_start = race_dt - timedelta(minutes=config.RACE_WINDOW_BEFORE_MINUTES)
+                window_end = race_dt + timedelta(hours=config.RACE_WINDOW_AFTER_HOURS)
+                if window_start <= now <= window_end:
+                    session_key = s.get("session_key")
+                    race_id = f"race_{session_key}"
+                    logger.info("OpenF1 fallback found active race: %s (%s)", s.get("circuit_short_name"), session_key)
+                    self._session_key = session_key
+                    return {"id": race_id, "datetime": race_dt}
+        except Exception:
+            logger.exception("Failed to check OpenF1 for active session")
+        return None
+
     def _seconds_until_next_window(self) -> float:
         now = self._now()
         soonest = float("inf")
@@ -82,7 +164,9 @@ class LiveRaceRelay:
             wake = (race["datetime"] - timedelta(minutes=config.RACE_WINDOW_BEFORE_MINUTES + 5) - now).total_seconds()
             if wake > 0:
                 soonest = min(soonest, wake)
-        return 86400 if soonest == float("inf") else max(soonest, 0)
+        if soonest == float("inf"):
+            return 300  # If no schedule, check every 5 min (OpenF1 fallback)
+        return max(soonest, 0)
 
     def _start_relay(self, race_id: str):
         self._active = True

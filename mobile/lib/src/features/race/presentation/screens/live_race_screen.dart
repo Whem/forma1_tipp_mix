@@ -2,15 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:forma1_tipp/src/core/services/live_sse_service.dart';
 import 'package:forma1_tipp/src/core/theme/app_colors.dart';
 import 'package:forma1_tipp/src/core/widgets/app_gradient_background.dart';
 import 'package:forma1_tipp/src/core/widgets/glass_card.dart';
-import 'package:forma1_tipp/src/features/auth/presentation/auth_controller.dart';
-import 'package:forma1_tipp/src/features/race/data/race_repository.dart';
-import 'package:forma1_tipp/src/features/race/domain/driver.dart';
-import 'package:forma1_tipp/src/features/race/domain/live_race_data.dart';
-import 'package:forma1_tipp/src/features/race/domain/race.dart';
-import 'package:forma1_tipp/src/features/race/domain/team.dart';
 
 class LiveRaceScreen extends ConsumerWidget {
   const LiveRaceScreen({super.key, required this.raceId});
@@ -19,22 +14,7 @@ class LiveRaceScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final raceAsync = ref.watch(raceProvider(raceId));
-    final liveAsync = ref.watch(liveRaceProvider(raceId));
-    final driversAsync = ref.watch(allDriversProvider);
-    final teamsAsync = ref.watch(allTeamsProvider);
-
-    final uid =
-        ref.watch(authControllerProvider).valueOrNull?.firebaseUser?.uid;
-    final predictionAsync = uid != null
-        ? ref.watch(userPredictionProvider((raceId: raceId, uid: uid)))
-        : null;
-
-    final predictedPodium = <String>{};
-    final prediction = predictionAsync?.valueOrNull;
-    if (prediction != null) {
-      predictedPodium.addAll([prediction.p1, prediction.p2, prediction.p3]);
-    }
+    final liveAsync = ref.watch(liveRaceSseProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -44,36 +24,25 @@ class LiveRaceScreen extends ConsumerWidget {
       ),
       body: AppGradientBackground(
         child: SafeArea(
-          child: raceAsync.when(
+          child: liveAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
-            data: (race) {
-              if (race == null) {
-                return const Center(child: Text('Race not found'));
+            error: (e, _) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text('Connecting...', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  Text('$e', style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
+            ),
+            data: (state) {
+              if (!state.isActive || state.positions.isEmpty) {
+                return _buildWaitingView(context);
               }
-
-              return liveAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
-                data: (liveData) {
-                  if (liveData == null) {
-                    return _buildWaitingView(context, race);
-                  }
-
-                  final drivers = driversAsync.valueOrNull ?? [];
-                  final teams = teamsAsync.valueOrNull ?? [];
-
-                  return _buildLiveView(
-                    context,
-                    race,
-                    liveData,
-                    drivers,
-                    teams,
-                    predictedPodium,
-                  );
-                },
-              );
+              return _LiveTabbedView(state: state);
             },
           ),
         ),
@@ -81,121 +50,341 @@ class LiveRaceScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildWaitingView(BuildContext context, Race race) {
+  Widget _buildWaitingView(BuildContext context) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(race.flagEmoji, style: const TextStyle(fontSize: 48)),
+          const Icon(Icons.sports_motorsports, size: 64, color: AppColors.f1Red),
           const SizedBox(height: 16),
           Text(
-            race.nameEn,
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.w800),
+            'Várakozás az élő adatokra...',
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 24),
-          const Text('Waiting for live data...'),
+          const SizedBox(height: 8),
+          Text(
+            'A futam adatai automatikusan megjelennek.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildLiveView(
-    BuildContext context,
-    Race race,
-    LiveRaceData liveData,
-    List<Driver> drivers,
-    List<Team> teams,
-    Set<String> predictedPodium,
-  ) {
-    final driverMap = {for (final d in drivers) d.id: d};
-    final teamMap = {for (final t in teams) t.id: t};
+class _LiveTabbedView extends StatelessWidget {
+  const _LiveTabbedView({required this.state});
+  final LiveRaceState state;
 
-    final sortedPositions = List.of(liveData.positions)
-      ..sort((a, b) => a.position.compareTo(b.position));
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(race.flagEmoji, style: const TextStyle(fontSize: 24)),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  race.nameEn,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                  overflow: TextOverflow.ellipsis,
-                ),
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          // Header: status + lap
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _LiveBadge(status: state.status),
+                const SizedBox(width: 12),
+                if (state.currentLap > 0)
+                  Text(
+                    'Lap ${state.currentLap}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.f1Turquoise,
+                        ),
+                  ),
+              ],
+            ),
+          ),
+          if (state.status == 'safety_car')
+            _StatusBanner(label: 'SAFETY CAR', color: AppColors.jokerGold, icon: Icons.warning_amber_rounded)
+                .animate().fadeIn().shake(hz: 2, rotation: 0.01),
+          if (state.status == 'red_flag')
+            _StatusBanner(label: 'RED FLAG', color: AppColors.errorRed, icon: Icons.flag)
+                .animate().fadeIn().shake(hz: 2, rotation: 0.01),
+          const SizedBox(height: 8),
+          // Tab bar
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TabBar(
+              indicator: BoxDecoration(
+                color: AppColors.f1Red.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 10),
-              _LiveBadge(status: liveData.status),
-            ],
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey,
+              labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              dividerHeight: 0,
+              tabs: [
+                Tab(text: 'Versenyzők (${state.positions.length})'),
+                Tab(text: 'Tippelők (${state.userScores.length})'),
+              ],
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text(
-            'Lap ${liveData.currentLap} / ${liveData.totalLaps}',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.f1Turquoise,
-                ),
+          const SizedBox(height: 8),
+          // Tab content
+          Expanded(
+            child: TabBarView(
+              children: [
+                _DriversTab(positions: state.positions),
+                _UsersTab(scores: state.userScores),
+              ],
+            ),
           ),
-        ),
-        if (liveData.status == 'safety_car')
-          _StatusBanner(
-            label: 'SAFETY CAR',
-            color: AppColors.jokerGold,
-            icon: Icons.warning_amber_rounded,
-          ).animate().fadeIn().shake(hz: 2, rotation: 0.01),
-        if (liveData.status == 'red_flag')
-          _StatusBanner(
-            label: 'RED FLAG',
-            color: AppColors.errorRed,
-            icon: Icons.flag,
-          ).animate().fadeIn().shake(hz: 2, rotation: 0.01),
-        const SizedBox(height: 4),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
-            itemCount: sortedPositions.length,
-            itemBuilder: (context, index) {
-              final pos = sortedPositions[index];
-              final driver = driverMap[pos.driverId];
-              final team = driver != null ? teamMap[driver.teamId] : null;
-              final isPredicted = predictedPodium.contains(pos.driverId);
-              final teamColor =
-                  team != null ? (AppColors.teamColors[team.id]) : null;
-
-              return _PositionTile(
-                key: ValueKey(pos.driverId),
-                position: pos,
-                driver: driver,
-                teamColor: teamColor ?? Colors.grey,
-                teamName: team?.name ?? '',
-                isPredicted: isPredicted,
-              )
-                  .animate()
-                  .fadeIn(
-                    delay: Duration(milliseconds: index * 30),
-                    duration: 300.ms,
-                  )
-                  .slideX(begin: 0.03, end: 0);
-            },
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
+
+// ── Tab 1: Driver Positions ──
+
+class _DriversTab extends StatelessWidget {
+  const _DriversTab({required this.positions});
+  final List<SseDriverPosition> positions;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+      itemCount: positions.length,
+      itemBuilder: (context, index) {
+        final pos = positions[index];
+        return _DriverTile(pos: pos)
+            .animate()
+            .fadeIn(delay: Duration(milliseconds: index * 20), duration: 200.ms)
+            .slideX(begin: 0.02, end: 0);
+      },
+    );
+  }
+}
+
+class _DriverTile extends StatelessWidget {
+  const _DriverTile({required this.pos});
+  final SseDriverPosition pos;
+
+  static const _teamColors = <String, Color>{
+    'Ferrari': Color(0xFFDC0000),
+    'Mercedes': Color(0xFF00D2BE),
+    'Red Bull Racing': Color(0xFF0600EF),
+    'McLaren': Color(0xFFFF8700),
+    'Aston Martin': Color(0xFF006F62),
+    'Alpine': Color(0xFF0090FF),
+    'Williams': Color(0xFF005AFF),
+    'Racing Bulls': Color(0xFF2B4562),
+    'Haas': Color(0xFFB6BABD),
+    'Audi': Color(0xFF00594F),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final isRetired = pos.retired;
+    final teamColor = _teamColors[pos.team] ?? Colors.grey;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: GlassCard(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        borderRadius: 14,
+        opacity: isRetired ? 0.04 : 0.08,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 32,
+              child: Text(
+                isRetired ? 'RET' : 'P${pos.position}',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: isRetired ? 11 : 15,
+                  color: isRetired
+                      ? AppColors.errorRed
+                      : pos.position <= 3
+                          ? [AppColors.f1Gold, AppColors.f1Silver, AppColors.f1Bronze][pos.position - 1]
+                          : null,
+                ),
+              ),
+            ),
+            Container(
+              width: 4,
+              height: 32,
+              margin: const EdgeInsets.only(right: 10),
+              decoration: BoxDecoration(color: teamColor, borderRadius: BorderRadius.circular(2)),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    pos.name.isNotEmpty ? pos.name : pos.acronym,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          decoration: isRetired ? TextDecoration.lineThrough : null,
+                          color: isRetired ? Colors.grey : null,
+                        ),
+                  ),
+                  Text(
+                    pos.team,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              width: 80,
+              child: Text(
+                pos.gap,
+                textAlign: TextAlign.right,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Tab 2: User Prediction Scores ──
+
+class _UsersTab extends StatelessWidget {
+  const _UsersTab({required this.scores});
+  final List<SseUserScore> scores;
+
+  @override
+  Widget build(BuildContext context) {
+    if (scores.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.people_outline, size: 48, color: Colors.grey),
+            const SizedBox(height: 12),
+            Text('Tippelők adatai betöltés alatt...', style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 4),
+            Text('A Firestore kvóta resetelődése után jelenik meg.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+      itemCount: scores.length,
+      itemBuilder: (context, index) {
+        final score = scores[index];
+        return _UserScoreTile(score: score, rank: index + 1)
+            .animate()
+            .fadeIn(delay: Duration(milliseconds: index * 30), duration: 200.ms)
+            .slideX(begin: 0.02, end: 0);
+      },
+    );
+  }
+}
+
+class _UserScoreTile extends StatelessWidget {
+  const _UserScoreTile({required this.score, required this.rank});
+  final SseUserScore score;
+  final int rank;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: GlassCard(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        borderRadius: 14,
+        opacity: 0.08,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 32,
+              child: Text(
+                '#$rank',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: rank <= 3
+                      ? [AppColors.f1Gold, AppColors.f1Silver, AppColors.f1Bronze][rank - 1]
+                      : null,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.grey.withValues(alpha: 0.3),
+              backgroundImage: score.avatarUrl.isNotEmpty ? NetworkImage(score.avatarUrl) : null,
+              child: score.avatarUrl.isEmpty
+                  ? Text(score.displayName.isNotEmpty ? score.displayName[0].toUpperCase() : '?',
+                      style: const TextStyle(fontWeight: FontWeight.w700))
+                  : null,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          score.displayName,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (score.joker) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.bolt, color: AppColors.jokerGold, size: 16),
+                      ],
+                    ],
+                  ),
+                  Text(
+                    'P1: ${score.predictions['p1'] ?? '?'} · P2: ${score.predictions['p2'] ?? '?'} · P3: ${score.predictions['p3'] ?? '?'}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey, fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: score.livePoints > 0
+                    ? AppColors.successGreen.withValues(alpha: 0.2)
+                    : Colors.grey.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '${score.livePoints} pt',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  color: score.livePoints > 0 ? AppColors.successGreen : Colors.grey,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Shared Widgets ──
 
 class _LiveBadge extends StatelessWidget {
   const _LiveBadge({required this.status});
@@ -296,130 +485,6 @@ class _StatusBanner extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PositionTile extends StatelessWidget {
-  const _PositionTile({
-    super.key,
-    required this.position,
-    this.driver,
-    required this.teamColor,
-    required this.teamName,
-    required this.isPredicted,
-  });
-
-  final LivePosition position;
-  final Driver? driver;
-  final Color teamColor;
-  final String teamName;
-  final bool isPredicted;
-
-  @override
-  Widget build(BuildContext context) {
-    final isRetired = position.retired;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        borderRadius: 14,
-        opacity: isRetired ? 0.04 : 0.08,
-        child: Row(
-          children: [
-            SizedBox(
-              width: 32,
-              child: Text(
-                isRetired ? 'RET' : 'P${position.position}',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: isRetired ? 11 : 15,
-                  color: isRetired
-                      ? AppColors.errorRed
-                      : position.position <= 3
-                          ? [
-                              AppColors.f1Gold,
-                              AppColors.f1Silver,
-                              AppColors.f1Bronze,
-                            ][position.position - 1]
-                          : null,
-                ),
-              ),
-            ),
-            Container(
-              width: 4,
-              height: 32,
-              margin: const EdgeInsets.only(right: 10),
-              decoration: BoxDecoration(
-                color: teamColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    driver?.fullName ?? position.driverId,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          decoration:
-                              isRetired ? TextDecoration.lineThrough : null,
-                          color: isRetired
-                              ? Colors.grey
-                              : null,
-                        ),
-                  ),
-                  Text(
-                    teamName,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: Colors.grey, fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
-            if (position.pitStops > 0)
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.tire_repair,
-                        size: 14,
-                        color: Colors.grey.withValues(alpha: 0.6)),
-                    const SizedBox(width: 2),
-                    Text(
-                      '${position.pitStops}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-            SizedBox(
-              width: 70,
-              child: Text(
-                position.position == 1 ? 'LEADER' : position.gap,
-                textAlign: TextAlign.right,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'monospace',
-                      fontSize: 12,
-                    ),
-              ),
-            ),
-            if (isPredicted) ...[
-              const SizedBox(width: 6),
-              const Icon(Icons.star, color: AppColors.f1Gold, size: 18),
-            ],
-          ],
-        ),
       ),
     );
   }
