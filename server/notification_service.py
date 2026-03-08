@@ -2,7 +2,6 @@ import logging
 import time
 from datetime import datetime, timedelta
 
-import schedule
 from dateutil import tz
 from firebase_admin import firestore, messaging
 
@@ -11,6 +10,13 @@ import config
 logger = logging.getLogger(__name__)
 BUDAPEST = tz.gettz(config.TIMEZONE)
 
+# How far before the race to send the race reminder (minutes)
+RACE_REMINDER_BEFORE_MIN = 30
+# How far before the race to send the streak reminder (hours)
+STREAK_REMINDER_BEFORE_H = 24
+# How far before the next event to start active polling (hours)
+WAKE_UP_MARGIN_H = 25
+
 
 class NotificationService:
     def __init__(self):
@@ -18,74 +24,93 @@ class NotificationService:
         self._sent_reminders: set[str] = set()
         self._sent_results: set[str] = set()
         self._sent_streak: set[str] = set()
-        self._cached_races: list | None = None
-        self._cache_time: datetime | None = None
+        self._schedule: list[dict] = []
 
     def start(self):
         logger.info("NotificationService started")
-        schedule.every(1).minutes.do(self._check_notifications)
+        self._load_schedule()
         while True:
-            schedule.run_pending()
-            time.sleep(10)
+            try:
+                sleep_sec = self._seconds_until_next_event()
+                if sleep_sec > 60:
+                    logger.info("Notification service sleeping %d min until next event", sleep_sec // 60)
+                    time.sleep(min(sleep_sec, 3600))
+                    continue
+                self._check_and_send()
+            except Exception as exc:
+                err_str = str(exc).lower()
+                if 'quota' in err_str or '429' in err_str or 'resource_exhausted' in err_str:
+                    logger.warning("Quota exceeded, sleeping 5 min")
+                    time.sleep(300)
+                else:
+                    logger.exception("Error in notification cycle")
+                    time.sleep(60)
+            time.sleep(30)
 
     def _now(self) -> datetime:
         return datetime.now(BUDAPEST)
 
-    def _refresh_race_cache(self):
+    # ── Schedule loading (1 Firestore read per startup / per day) ──
+
+    def _load_schedule(self):
+        logger.info("Loading race schedule from Firestore (one-time)")
+        self._schedule = []
+        for doc in self.db.collection("races").order_by("raceDate").stream():
+            data = doc.to_dict()
+            race_dt = self._parse_race_datetime(data)
+            if race_dt is not None:
+                self._schedule.append({
+                    "id": doc.id,
+                    "name": data.get("raceName", "Race"),
+                    "datetime": race_dt,
+                    "data": data,
+                })
+        logger.info("Loaded %d races into schedule", len(self._schedule))
+
+    def _seconds_until_next_event(self) -> float:
         now = self._now()
-        if self._cached_races is None or self._cache_time is None or (now - self._cache_time).total_seconds() > 600:
-            logger.debug("Refreshing race cache for notifications")
-            self._cached_races = []
-            for doc in self.db.collection("races").order_by("raceDate").stream():
-                data = doc.to_dict()
-                data["_id"] = doc.id
-                self._cached_races.append(data)
-            self._cache_time = now
-        return self._cached_races
+        soonest = float("inf")
+        for race in self._schedule:
+            race_dt = race["datetime"]
+            # streak reminder window: 24h before race
+            streak_wake = (race_dt - timedelta(hours=WAKE_UP_MARGIN_H) - now).total_seconds()
+            # race reminder window: 30 min before race
+            reminder_wake = (race_dt - timedelta(minutes=RACE_REMINDER_BEFORE_MIN + 5) - now).total_seconds()
 
-    def _check_notifications(self):
-        try:
-            self._check_race_reminders()
-            self._check_streak_reminders()
-        except Exception as exc:
-            err_str = str(exc).lower()
-            if 'quota' in err_str or '429' in err_str:
-                logger.warning("Quota exceeded in notification check, will retry later")
-            else:
-                logger.exception("Error in notification check cycle")
+            for wake in (streak_wake, reminder_wake):
+                if wake > 0:
+                    soonest = min(soonest, wake)
 
-    def _check_race_reminders(self):
+            # If we're inside an active window, return 0
+            if -timedelta(hours=4).total_seconds() < (race_dt - now).total_seconds() < timedelta(hours=WAKE_UP_MARGIN_H).total_seconds():
+                return 0
+
+        if soonest == float("inf"):
+            # No future races, reload schedule once a day
+            return 86400
+        return max(soonest, 0)
+
+    # ── Active checking (only called when near a race) ──
+
+    def _check_and_send(self):
         now = self._now()
-        races = self._refresh_race_cache()
-
-        for race in races:
-            race_id = race["_id"]
-            race_dt = self._parse_race_datetime(race)
-            if race_dt is None:
-                continue
-
+        for race in self._schedule:
+            race_id = race["id"]
+            race_dt = race["datetime"]
             minutes_until = (race_dt - now).total_seconds() / 60
+            hours_until = minutes_until / 60
 
+            # Race reminder: 0-30 min before race
             reminder_key = f"reminder_{race_id}"
-            if reminder_key not in self._sent_reminders and 0 < minutes_until <= 30:
-                self._send_race_reminder(race_id, race.get("raceName", "Race"))
+            if reminder_key not in self._sent_reminders and 0 < minutes_until <= RACE_REMINDER_BEFORE_MIN:
+                self._send_race_reminder(race_id, race["name"])
                 self._sent_reminders.add(reminder_key)
 
-    def _check_streak_reminders(self):
-        now = self._now()
-        next_race = self._get_next_race()
-        if next_race is None:
-            return
+            # Streak reminder: 23-25h before race
+            if 23 < hours_until <= 25:
+                self._send_streak_reminders(race_id)
 
-        race_id = next_race["id"]
-        race_dt = self._parse_race_datetime(next_race["data"])
-        if race_dt is None:
-            return
-
-        hours_until = (race_dt - now).total_seconds() / 3600
-        if not (23 < hours_until <= 25):
-            return
-
+    def _send_streak_reminders(self, race_id: str):
         streak_key = f"streak_{race_id}"
         if streak_key in self._sent_streak:
             return
@@ -160,15 +185,6 @@ class NotificationService:
                 logger.exception("Failed to send results notification to topic %s", topic)
 
         self._sent_results.add(result_key)
-
-    def _get_next_race(self) -> dict | None:
-        now = self._now()
-        races = self._refresh_race_cache()
-        for data in races:
-            race_dt = self._parse_race_datetime(data)
-            if race_dt and race_dt > now:
-                return {"id": data["_id"], "data": data}
-        return None
 
     @staticmethod
     def _parse_race_datetime(race: dict) -> datetime | None:

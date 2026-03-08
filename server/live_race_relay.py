@@ -18,67 +18,71 @@ class LiveRaceRelay:
         self._active = False
         self._current_race_id: str | None = None
         self._session_key: int | None = None
-        self._cached_races: list | None = None
-        self._cache_time: datetime | None = None
-        self._backoff = 0
+        self._schedule: list[dict] = []
 
     def start(self):
         logger.info("LiveRaceRelay started")
+        self._load_schedule()
         while True:
             try:
-                self._tick()
-                self._backoff = 0
+                race = self._find_active_race()
+                if race is None:
+                    if self._active:
+                        self._finish_relay()
+                    sleep_sec = self._seconds_until_next_window()
+                    if sleep_sec > 120:
+                        logger.info("Live relay sleeping %d min until next race window", sleep_sec // 60)
+                        time.sleep(min(sleep_sec, 3600))
+                    else:
+                        time.sleep(60)
+                    continue
+
+                if not self._active:
+                    self._start_relay(race["id"])
+
+                self._poll_and_update(race["id"], race["datetime"])
             except Exception as exc:
                 err_str = str(exc).lower()
                 if 'quota' in err_str or '429' in err_str or 'resource_exhausted' in err_str:
-                    self._backoff = min((self._backoff or 30) * 2, 600)
-                    logger.warning("Quota exceeded, backing off %ds", self._backoff)
-                    time.sleep(self._backoff)
+                    logger.warning("Quota exceeded, sleeping 5 min")
+                    time.sleep(300)
                 else:
                     logger.exception("Error in live relay tick")
-            time.sleep(30)
+                    time.sleep(30)
 
     def _now(self) -> datetime:
         return datetime.now(BUDAPEST)
 
-    def _tick(self):
+    # ── Schedule (1 Firestore read on startup) ──
+
+    def _load_schedule(self):
+        logger.info("Loading race schedule from Firestore (one-time)")
+        self._schedule = []
+        for doc in self.db.collection("races").order_by("raceDate").stream():
+            data = doc.to_dict()
+            race_dt = self._parse_race_datetime(data)
+            if race_dt is not None:
+                self._schedule.append({"id": doc.id, "data": data, "datetime": race_dt})
+        logger.info("Loaded %d races for live relay", len(self._schedule))
+
+    def _find_active_race(self) -> dict | None:
         now = self._now()
-        race = self._find_active_race(now)
-
-        if race is None:
-            if self._active:
-                self._finish_relay()
-            time.sleep(60)
-            return
-
-        race_id = race["id"]
-        race_dt = race["datetime"]
-
-        if not self._active:
-            self._start_relay(race_id)
-
-        self._poll_and_update(race_id, race_dt)
-
-    def _find_active_race(self, now: datetime) -> dict | None:
-        # Cache race schedule for 10 minutes to avoid burning Firestore quota
-        if self._cached_races is None or self._cache_time is None or (now - self._cache_time).total_seconds() > 600:
-            logger.info("Refreshing race schedule cache from Firestore")
-            self._cached_races = []
-            for doc in self.db.collection("races").order_by("raceDate").stream():
-                data = doc.to_dict()
-                race_dt = self._parse_race_datetime(data)
-                if race_dt is not None:
-                    self._cached_races.append({"id": doc.id, "data": data, "datetime": race_dt})
-            self._cache_time = now
-
-        for race in self._cached_races:
+        for race in self._schedule:
             race_dt = race["datetime"]
             window_start = race_dt - timedelta(minutes=config.RACE_WINDOW_BEFORE_MINUTES)
             window_end = race_dt + timedelta(hours=config.RACE_WINDOW_AFTER_HOURS)
             if window_start <= now <= window_end:
                 return race
-
         return None
+
+    def _seconds_until_next_window(self) -> float:
+        now = self._now()
+        soonest = float("inf")
+        for race in self._schedule:
+            wake = (race["datetime"] - timedelta(minutes=config.RACE_WINDOW_BEFORE_MINUTES + 5) - now).total_seconds()
+            if wake > 0:
+                soonest = min(soonest, wake)
+        return 86400 if soonest == float("inf") else max(soonest, 0)
 
     def _start_relay(self, race_id: str):
         self._active = True
