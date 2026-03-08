@@ -52,6 +52,7 @@ class LiveRaceScreen extends ConsumerWidget {
   }
 
   Widget _buildWaitingView(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -59,12 +60,12 @@ class LiveRaceScreen extends ConsumerWidget {
           const Icon(Icons.sports_motorsports, size: 64, color: AppColors.f1Red),
           const SizedBox(height: 16),
           Text(
-            'Várakozás az élő adatokra...',
+            l10n?.waitingForLiveData ?? 'Waiting for live data...',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
           Text(
-            'A futam adatai automatikusan megjelennek.',
+            l10n?.liveDataAppears ?? 'Race data will appear automatically.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
           ),
         ],
@@ -79,6 +80,7 @@ class _LiveTabbedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return DefaultTabController(
       length: 2,
       child: Column(
@@ -108,26 +110,53 @@ class _LiveTabbedView extends StatelessWidget {
           if (state.status == 'red_flag')
             _StatusBanner(label: 'RED FLAG', color: AppColors.errorRed, icon: Icons.flag)
                 .animate().fadeIn().shake(hz: 2, rotation: 0.01),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           // Tab bar
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
             ),
             child: TabBar(
               indicator: BoxDecoration(
-                color: AppColors.f1Red.withValues(alpha: 0.3),
+                gradient: LinearGradient(
+                  colors: [AppColors.f1Red.withValues(alpha: 0.5), AppColors.f1Red.withValues(alpha: 0.25)],
+                ),
                 borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(color: AppColors.f1Red.withValues(alpha: 0.15), blurRadius: 8, offset: const Offset(0, 2)),
+                ],
               ),
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.grey,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              unselectedLabelColor: Colors.grey.shade500,
+              labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, letterSpacing: 0.3),
+              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
               dividerHeight: 0,
+              splashBorderRadius: BorderRadius.circular(12),
               tabs: [
-                Tab(text: 'Versenyzők (${state.positions.length})'),
-                Tab(text: 'Tippelők (${state.userScores.length})'),
+                Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.sports_motorsports_outlined, size: 18),
+                      const SizedBox(width: 6),
+                      Text('${l10n?.liveDriversTab ?? "Drivers"} (${state.positions.length})'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.emoji_events_outlined, size: 18),
+                      const SizedBox(width: 6),
+                      Text('${l10n?.livePredictorsTab ?? "Predictions"} (${state.userScores.length})'),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -267,15 +296,17 @@ class _UsersTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (scores.isEmpty) {
+      final l10n = AppLocalizations.of(context);
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.people_outline, size: 48, color: Colors.grey),
+            const Icon(Icons.emoji_events_outlined, size: 48, color: Colors.grey),
             const SizedBox(height: 12),
-            Text('Tippelők adatai betöltés alatt...', style: Theme.of(context).textTheme.bodyMedium),
+            Text(l10n?.predictorsLoading ?? 'Prediction scores loading...',
+                style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 4),
-            Text('A Firestore kvóta resetelődése után jelenik meg.',
+            Text(l10n?.predictorsQuotaNote ?? 'Scores will appear when data is available.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
           ],
         ),

@@ -440,6 +440,42 @@ abstract class AppLocalizations {
   /// **'Retired'**
   String get retired;
 
+  /// No description provided for @liveDriversTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Drivers'**
+  String get liveDriversTab;
+
+  /// No description provided for @livePredictorsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Predictions'**
+  String get livePredictorsTab;
+
+  /// No description provided for @waitingForLiveData.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for live data...'**
+  String get waitingForLiveData;
+
+  /// No description provided for @liveDataAppears.
+  ///
+  /// In en, this message translates to:
+  /// **'Race data will appear automatically.'**
+  String get liveDataAppears;
+
+  /// No description provided for @predictorsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Prediction scores loading...'**
+  String get predictorsLoading;
+
+  /// No description provided for @predictorsQuotaNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Scores will appear when data is available.'**
+  String get predictorsQuotaNote;
+
   /// No description provided for @resultReveal.
   ///
   /// In en, this message translates to:

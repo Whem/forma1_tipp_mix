@@ -1,6 +1,6 @@
 {
-  "version": "2.6.0",
-  "build": 14,
-  "releaseNotes": "Élő futam nézet SSE-vel, versenyzők + tippelők élő pontszáma, OpenF1 integráció",
+  "version": "2.6.1",
+  "build": 15,
+  "releaseNotes": "Ă‰lĹ‘ futam nĂ©zet SSE-vel, versenyzĹ‘k + tippelĹ‘k Ă©lĹ‘ pontszĂˇma, OpenF1 integrĂˇciĂł",
   "apkUrl": "https://f1.liggin.xyz/releases/f1tippmix.apk"
 }

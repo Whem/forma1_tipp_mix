@@ -190,6 +190,24 @@ class AppLocalizationsHu extends AppLocalizations {
   String get retired => 'Kiesett';
 
   @override
+  String get liveDriversTab => 'Versenyzők';
+
+  @override
+  String get livePredictorsTab => 'Tippelők';
+
+  @override
+  String get waitingForLiveData => 'Várakozás az élő adatokra...';
+
+  @override
+  String get liveDataAppears => 'A futam adatai automatikusan megjelennek.';
+
+  @override
+  String get predictorsLoading => 'Tippelők adatai betöltés alatt...';
+
+  @override
+  String get predictorsQuotaNote => 'A pontszámok hamarosan megjelennek.';
+
+  @override
   String get resultReveal => 'Eredmény';
 
   @override

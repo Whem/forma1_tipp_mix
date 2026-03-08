@@ -67,6 +67,12 @@
   "preRace": "Futam előtt",
   "finished": "Befejezve",
   "retired": "Kiesett",
+  "liveDriversTab": "Versenyzők",
+  "livePredictorsTab": "Tippelők",
+  "waitingForLiveData": "Várakozás az élő adatokra...",
+  "liveDataAppears": "A futam adatai automatikusan megjelennek.",
+  "predictorsLoading": "Tippelők adatai betöltés alatt...",
+  "predictorsQuotaNote": "A pontszámok hamarosan megjelennek.",
 
   "resultReveal": "Eredmény",
   "correct": "Helyes!",

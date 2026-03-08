@@ -189,6 +189,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get retired => 'Retired';
 
   @override
+  String get liveDriversTab => 'Drivers';
+
+  @override
+  String get livePredictorsTab => 'Predictions';
+
+  @override
+  String get waitingForLiveData => 'Waiting for live data...';
+
+  @override
+  String get liveDataAppears => 'Race data will appear automatically.';
+
+  @override
+  String get predictorsLoading => 'Prediction scores loading...';
+
+  @override
+  String get predictorsQuotaNote =>
+      'Scores will appear when data is available.';
+
+  @override
   String get resultReveal => 'Result Reveal';
 
   @override

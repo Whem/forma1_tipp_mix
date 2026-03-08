@@ -63,6 +63,55 @@ def connect_ssh():
     return ssh
 
 
+def bump_version():
+    """Auto-increment patch version and build number."""
+    import json as _json
+    import re
+
+    # Read version.json
+    vj_path = os.path.join(PROJECT_ROOT, "version.json")
+    with open(vj_path) as f:
+        vdata = _json.load(f)
+
+    old_ver = vdata["version"]
+    old_build = vdata["build"]
+    parts = old_ver.split(".")
+    parts[2] = str(int(parts[2]) + 1)
+    new_ver = ".".join(parts)
+    new_build = old_build + 1
+
+    # Update version.json
+    vdata["version"] = new_ver
+    vdata["build"] = new_build
+    with open(vj_path, "w", encoding="utf-8") as f:
+        _json.dump(vdata, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+
+    # Update pubspec.yaml
+    pubspec_path = os.path.join(MOBILE_DIR, "pubspec.yaml")
+    with open(pubspec_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    content = re.sub(
+        r"version:\s*\S+",
+        f"version: {new_ver}+{new_build}",
+        content,
+    )
+    with open(pubspec_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    # Update landing page version strings
+    landing_path = os.path.join(SERVER_DIR, "landing", "index.html")
+    if os.path.exists(landing_path):
+        with open(landing_path, "r", encoding="utf-8") as f:
+            html = f.read()
+        html = re.sub(r"v\d+\.\d+\.\d+", f"v{new_ver}", html)
+        with open(landing_path, "w", encoding="utf-8") as f:
+            f.write(html)
+
+    print(f"\n📈 Version bumped: {old_ver}+{old_build} → {new_ver}+{new_build}")
+    return new_ver, new_build
+
+
 def build_apk():
     print("\n🔨 Building release APK...")
     result = subprocess.run(
@@ -105,7 +154,7 @@ def deploy_version_json(ssh):
     sftp.close()
 
     import json
-    with open(local) as f:
+    with open(local, encoding="utf-8") as f:
         v = json.load(f)
     print(f"  ✅ v{v['version']} build {v['build']}")
 
@@ -184,8 +233,9 @@ def main():
 
     deploy_all = not args.server and not args.apk
 
-    # Build APK
+    # Bump version + Build APK
     if (deploy_all or args.apk) and not args.no_build:
+        bump_version()
         build_apk()
 
     # Connect to VPS

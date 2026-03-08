@@ -187,23 +187,44 @@ class LiveService:
         self._race_id = f"race_{self._session_key}"
         self._status = "pre_race"
         self._active = True
+        self._firestore_cached = False
 
         logger.info("Activating live race: %s (session %s)", race.get("circuit", "?"), self._session_key)
 
-        # Cache Firestore data in a background thread with timeout (don't block polling)
+        # Try initial cache with timeout
         cache_thread = threading.Thread(target=self._try_cache_firestore, daemon=True)
         cache_thread.start()
         cache_thread.join(timeout=15)
         if cache_thread.is_alive():
-            logger.warning("Firestore cache timed out (quota?), continuing without predictions")
+            logger.warning("Firestore cache timed out (quota?), will retry in background")
+
+        # Start background retry thread if cache failed
+        if not self._firestore_cached:
+            threading.Thread(target=self._retry_cache_loop, daemon=True).start()
 
         logger.info("Live race activated with %d predictions cached", len(self._predictions))
 
     def _try_cache_firestore(self):
         try:
             self._cache_firestore_data()
+            self._firestore_cached = True
         except Exception:
-            logger.exception("Failed to cache Firestore data, continuing without predictions")
+            logger.exception("Failed to cache Firestore data")
+
+    def _retry_cache_loop(self):
+        """Retry Firestore cache every 5 minutes until success."""
+        import time as _time
+        while self._active and not self._firestore_cached:
+            _time.sleep(300)  # 5 minutes
+            if self._firestore_cached or not self._active:
+                break
+            logger.info("Retrying Firestore cache...")
+            t = threading.Thread(target=self._try_cache_firestore, daemon=True)
+            t.start()
+            t.join(timeout=30)
+            if self._firestore_cached:
+                logger.info("Firestore cache loaded! %d predictions", len(self._predictions))
+                self._broadcast()  # Push updated scores to clients
 
     def _cache_firestore_data(self):
         """Load drivers, teams, users, and predictions from Firestore ONCE."""

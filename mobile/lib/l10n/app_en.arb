@@ -67,6 +67,12 @@
   "preRace": "Pre-Race",
   "finished": "Finished",
   "retired": "Retired",
+  "liveDriversTab": "Drivers",
+  "livePredictorsTab": "Predictions",
+  "waitingForLiveData": "Waiting for live data...",
+  "liveDataAppears": "Race data will appear automatically.",
+  "predictorsLoading": "Prediction scores loading...",
+  "predictorsQuotaNote": "Scores will appear when data is available.",
 
   "resultReveal": "Result Reveal",
   "correct": "Correct!",
