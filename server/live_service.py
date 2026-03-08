@@ -26,30 +26,30 @@ BUDAPEST = tz.gettz(config.TIMEZONE)
 OPENF1_TOKEN_URL = "https://api.openf1.org/token"
 OPENF1_CREDS_PATH = os.path.join(config.BASE_DIR, "openf1_credentials.json")
 
-# Fallback driver map for 2026 season (number -> acronym, name, team)
+# 2026 season driver map (number -> acronym, name, team) — from OpenF1 qualifying data
 DRIVER_MAP_2026 = {
-    1: ("VER", "Max Verstappen", "Red Bull Racing"),
-    3: ("RIC", "Daniel Ricciardo", "Racing Bulls"),
-    5: ("DOO", "Jack Doohan", "Alpine"),
-    6: ("HAD", "Isack Hadjar", "Racing Bulls"),
+    1:  ("NOR", "Lando Norris", "McLaren"),
+    3:  ("VER", "Max Verstappen", "Red Bull Racing"),
+    5:  ("BOR", "Gabriel Bortoleto", "Audi"),
+    6:  ("HAD", "Isack Hadjar", "Red Bull Racing"),
     10: ("GAS", "Pierre Gasly", "Alpine"),
-    11: ("PER", "Sergio Perez", "Red Bull Racing"),
-    12: ("SAI", "Carlos Sainz", "Williams"),
+    11: ("PER", "Sergio Perez", "Cadillac"),
+    12: ("ANT", "Kimi Antonelli", "Mercedes"),
     14: ("ALO", "Fernando Alonso", "Aston Martin"),
     16: ("LEC", "Charles Leclerc", "Ferrari"),
     18: ("STR", "Lance Stroll", "Aston Martin"),
     23: ("ALB", "Alexander Albon", "Williams"),
     27: ("HUL", "Nico Hulkenberg", "Audi"),
-    30: ("BOR", "Gabriel Bortoleto", "Audi"),
+    30: ("LAW", "Liam Lawson", "Racing Bulls"),
     31: ("OCO", "Esteban Ocon", "Haas"),
-    41: ("BEA", "Oliver Bearman", "Haas"),
+    41: ("LIN", "Arvid Lindblad", "Racing Bulls"),
     43: ("COL", "Franco Colapinto", "Alpine"),
     44: ("HAM", "Lewis Hamilton", "Ferrari"),
     55: ("SAI", "Carlos Sainz", "Williams"),
     63: ("RUS", "George Russell", "Mercedes"),
-    77: ("BOT", "Valtteri Bottas", "Mercedes"),
+    77: ("BOT", "Valtteri Bottas", "Cadillac"),
     81: ("PIA", "Oscar Piastri", "McLaren"),
-    87: ("ANT", "Andrea Kimi Antonelli", "Mercedes"),
+    87: ("BEA", "Oliver Bearman", "Haas"),
 }
 
 

@@ -212,7 +212,9 @@ class _DriverTile extends StatelessWidget {
     'Williams': Color(0xFF005AFF),
     'Racing Bulls': Color(0xFF2B4562),
     'Haas': Color(0xFFB6BABD),
+    'Haas F1 Team': Color(0xFFB6BABD),
     'Audi': Color(0xFF00594F),
+    'Cadillac': Color(0xFF1E3264),
   };
 
   @override
