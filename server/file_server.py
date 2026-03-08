@@ -4,7 +4,9 @@ Uses Flask for simplicity - serves files from /root/f1-tipp-server/uploads/
 """
 import os
 import logging
+import queue
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from socketserver import ThreadingMixIn
 import json
 import uuid
 from urllib.parse import parse_qs, urlparse
@@ -115,6 +117,14 @@ class FileHandler(SimpleHTTPRequestHandler):
             self._handle_version()
             return
 
+        if clean_path == "/api/live/stream":
+            self._handle_sse()
+            return
+
+        if clean_path == "/api/live/state":
+            self._handle_live_state()
+            return
+
         if clean_path.startswith("/releases/"):
             self._serve_release_file()
             return
@@ -191,13 +201,71 @@ class FileHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _handle_sse(self):
+        """Server-Sent Events endpoint for live race data."""
+        from live_service import get_live_service
+        svc = get_live_service()
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+
+        q = queue.Queue(maxsize=5)
+        svc.subscribe(q)
+
+        try:
+            # Send initial state immediately
+            if svc.is_active():
+                data = svc.get_state_json()
+                self.wfile.write(f"data: {data}\n\n".encode())
+                self.wfile.flush()
+            else:
+                self.wfile.write(b'data: {"status":"waiting"}\n\n')
+                self.wfile.flush()
+
+            # Keep connection open and stream updates
+            while True:
+                try:
+                    data = q.get(timeout=30)
+                    self.wfile.write(f"data: {data}\n\n".encode())
+                    self.wfile.flush()
+                except queue.Empty:
+                    # Send keepalive comment
+                    self.wfile.write(b": keepalive\n\n")
+                    self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            pass
+        finally:
+            svc.unsubscribe(q)
+
+    def _handle_live_state(self):
+        """One-shot endpoint returning current live state as JSON."""
+        from live_service import get_live_service
+        svc = get_live_service()
+        if svc.is_active():
+            data = svc.get_state_json()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(data.encode())
+        else:
+            self._json_response({"status": "waiting", "message": "No active race"})
+
     def log_message(self, format, *args):
         logger.info(format % args)
 
 
+class ThreadingFileServer(ThreadingMixIn, HTTPServer):
+    daemon_threads = True
+
+
 def start_file_server(port=PORT):
-    server = HTTPServer(("0.0.0.0", port), FileHandler)
-    logger.info(f"File server listening on port {port}")
+    server = ThreadingFileServer(("0.0.0.0", port), FileHandler)
+    logger.info(f"File server listening on port {port} (threaded)")
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     return server
@@ -205,6 +273,6 @@ def start_file_server(port=PORT):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    server = HTTPServer(("0.0.0.0", PORT), FileHandler)
+    server = ThreadingFileServer(("0.0.0.0", PORT), FileHandler)
     logger.info(f"File server on port {PORT}, uploads dir: {UPLOAD_DIR}")
     server.serve_forever()

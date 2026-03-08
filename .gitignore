@@ -442,5 +442,11 @@ server/test_firestore_check.py
 *.json.bak
 forma1mix-*.json
 
+# OpenF1 API credentials
+server/openf1_credentials.json
+
+# Temp debug scripts
+server/_*.py
+
 # Flutter build output
 mobile/build/

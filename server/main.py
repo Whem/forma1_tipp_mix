@@ -61,7 +61,7 @@ def main():
 
     from notification_service import NotificationService
     from race_result_worker import RaceResultWorker
-    from live_race_relay import LiveRaceRelay
+    from live_service import get_live_service
     from file_server import start_file_server
 
     notification_svc = None
@@ -82,10 +82,10 @@ def main():
         logger.info("Race result worker enabled")
 
     if args.live or args.all:
-        relay = LiveRaceRelay()
-        t = threading.Thread(target=run_live, args=(relay,), daemon=True, name="live")
+        live_svc = get_live_service()
+        t = threading.Thread(target=live_svc.start, daemon=True, name="live")
         threads.append(t)
-        logger.info("Live race relay enabled")
+        logger.info("Live race service (SSE) enabled")
 
     def signal_handler(signum, frame):
         logger.info("Shutdown signal received (%s)", signal.Signals(signum).name)
