@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
-const String _baseUrl = 'https://liggin.xyz';
+const String _baseUrl = 'https://f1.liggin.xyz';
 const String _liveStateUrl = '$_baseUrl/api/live/state';
 const String _liveStreamUrl = '$_baseUrl/api/live/stream';
 

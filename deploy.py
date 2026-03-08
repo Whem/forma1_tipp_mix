@@ -66,9 +66,10 @@ def connect_ssh():
 def build_apk():
     print("\n🔨 Building release APK...")
     result = subprocess.run(
-        ["flutter", "build", "apk", "--release"],
+        "flutter build apk --release",
         cwd=MOBILE_DIR,
         capture_output=True, text=True,
+        shell=True,
     )
     if result.returncode != 0:
         print(f"❌ APK build failed:\n{result.stderr}")

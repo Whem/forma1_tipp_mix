@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:forma1_tipp/src/core/services/live_sse_service.dart';
 import 'package:forma1_tipp/src/core/theme/app_colors.dart';
+import 'package:forma1_tipp/l10n/gen/app_localizations.dart';
 import 'package:forma1_tipp/src/core/widgets/app_gradient_background.dart';
 import 'package:forma1_tipp/src/core/widgets/glass_card.dart';
 
@@ -19,7 +20,7 @@ class LiveRaceScreen extends ConsumerWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Live Race'),
+        title: Text(AppLocalizations.of(context)?.liveRace ?? 'Live Race'),
         backgroundColor: Colors.transparent,
       ),
       body: AppGradientBackground(
