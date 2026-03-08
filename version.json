@@ -1,6 +1,6 @@
 {
-  "version": "2.5.1",
-  "build": 12,
-  "releaseNotes": "Futam tipp oldal magyar fordítás, Facebook link redirect fix, landing page javítás",
+  "version": "2.5.2",
+  "build": 13,
+  "releaseNotes": "Értesítések oldal javítás (Firestore index), Facebook link fix",
   "apkUrl": "https://f1.liggin.xyz/releases/f1tippmix.apk"
 }

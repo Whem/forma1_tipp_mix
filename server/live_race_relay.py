@@ -18,14 +18,24 @@ class LiveRaceRelay:
         self._active = False
         self._current_race_id: str | None = None
         self._session_key: int | None = None
+        self._cached_races: list | None = None
+        self._cache_time: datetime | None = None
+        self._backoff = 0
 
     def start(self):
         logger.info("LiveRaceRelay started")
         while True:
             try:
                 self._tick()
-            except Exception:
-                logger.exception("Error in live relay tick")
+                self._backoff = 0
+            except Exception as exc:
+                err_str = str(exc).lower()
+                if 'quota' in err_str or '429' in err_str or 'resource_exhausted' in err_str:
+                    self._backoff = min((self._backoff or 30) * 2, 600)
+                    logger.warning("Quota exceeded, backing off %ds", self._backoff)
+                    time.sleep(self._backoff)
+                else:
+                    logger.exception("Error in live relay tick")
             time.sleep(30)
 
     def _now(self) -> datetime:
@@ -50,19 +60,23 @@ class LiveRaceRelay:
         self._poll_and_update(race_id, race_dt)
 
     def _find_active_race(self, now: datetime) -> dict | None:
-        races = self.db.collection("races").order_by("raceDate").stream()
+        # Cache race schedule for 10 minutes to avoid burning Firestore quota
+        if self._cached_races is None or self._cache_time is None or (now - self._cache_time).total_seconds() > 600:
+            logger.info("Refreshing race schedule cache from Firestore")
+            self._cached_races = []
+            for doc in self.db.collection("races").order_by("raceDate").stream():
+                data = doc.to_dict()
+                race_dt = self._parse_race_datetime(data)
+                if race_dt is not None:
+                    self._cached_races.append({"id": doc.id, "data": data, "datetime": race_dt})
+            self._cache_time = now
 
-        for doc in races:
-            data = doc.to_dict()
-            race_dt = self._parse_race_datetime(data)
-            if race_dt is None:
-                continue
-
+        for race in self._cached_races:
+            race_dt = race["datetime"]
             window_start = race_dt - timedelta(minutes=config.RACE_WINDOW_BEFORE_MINUTES)
             window_end = race_dt + timedelta(hours=config.RACE_WINDOW_AFTER_HOURS)
-
             if window_start <= now <= window_end:
-                return {"id": doc.id, "data": data, "datetime": race_dt}
+                return race
 
         return None
 

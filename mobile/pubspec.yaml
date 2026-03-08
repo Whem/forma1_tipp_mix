@@ -1,7 +1,7 @@
 name: forma1_tipp
 description: "Formula 1 Tipping Game - Predict champions, race winners, and compete with friends."
 publish_to: 'none'
-version: 2.5.1+12
+version: 2.5.2+13
 
 environment:
   sdk: ^3.11.0

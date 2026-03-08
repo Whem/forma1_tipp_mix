@@ -18,6 +18,8 @@ class NotificationService:
         self._sent_reminders: set[str] = set()
         self._sent_results: set[str] = set()
         self._sent_streak: set[str] = set()
+        self._cached_races: list | None = None
+        self._cache_time: datetime | None = None
 
     def start(self):
         logger.info("NotificationService started")
@@ -29,21 +31,35 @@ class NotificationService:
     def _now(self) -> datetime:
         return datetime.now(BUDAPEST)
 
+    def _refresh_race_cache(self):
+        now = self._now()
+        if self._cached_races is None or self._cache_time is None or (now - self._cache_time).total_seconds() > 600:
+            logger.debug("Refreshing race cache for notifications")
+            self._cached_races = []
+            for doc in self.db.collection("races").order_by("raceDate").stream():
+                data = doc.to_dict()
+                data["_id"] = doc.id
+                self._cached_races.append(data)
+            self._cache_time = now
+        return self._cached_races
+
     def _check_notifications(self):
         try:
             self._check_race_reminders()
             self._check_streak_reminders()
-        except Exception:
-            logger.exception("Error in notification check cycle")
+        except Exception as exc:
+            err_str = str(exc).lower()
+            if 'quota' in err_str or '429' in err_str:
+                logger.warning("Quota exceeded in notification check, will retry later")
+            else:
+                logger.exception("Error in notification check cycle")
 
     def _check_race_reminders(self):
         now = self._now()
-        races_ref = self.db.collection("races")
-        races = races_ref.order_by("raceDate").stream()
+        races = self._refresh_race_cache()
 
-        for race_doc in races:
-            race = race_doc.to_dict()
-            race_id = race_doc.id
+        for race in races:
+            race_id = race["_id"]
             race_dt = self._parse_race_datetime(race)
             if race_dt is None:
                 continue
@@ -147,16 +163,11 @@ class NotificationService:
 
     def _get_next_race(self) -> dict | None:
         now = self._now()
-        races = (
-            self.db.collection("races")
-            .order_by("raceDate")
-            .stream()
-        )
-        for doc in races:
-            data = doc.to_dict()
+        races = self._refresh_race_cache()
+        for data in races:
             race_dt = self._parse_race_datetime(data)
             if race_dt and race_dt > now:
-                return {"id": doc.id, "data": data}
+                return {"id": data["_id"], "data": data}
         return None
 
     @staticmethod
